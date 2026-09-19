@@ -1,0 +1,30 @@
+{
+  "name": "paper-glossary",
+  "version": "1.0.0",
+  "private": true,
+  "description": "论文术语笔记本，可从 Zotero 选中文字一键加入",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n server,web -c cyan,magenta \"node --watch server/index.js\" \"vite --config web/vite.config.js\"",
+    "dev:server": "node --watch server/index.js",
+    "dev:web": "vite --config web/vite.config.js",
+    "build": "vite build --config web/vite.config.js",
+    "start": "node server/index.js",
+    "plugin:pack": "node scripts/pack-plugin.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "jszip": "^3.10.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^5.4.11"
+  }
+}
