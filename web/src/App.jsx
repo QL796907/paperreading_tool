@@ -217,6 +217,7 @@ export default function App() {
       <div className={`book ${drawer ? "drawer-open" : ""}`}>
         <aside className="index">
           <div className="brand">
+            <img src="/icon.svg" alt="" width="36" height="36" />
             <h1>术语本</h1>
             <p className="eyebrow">Paper Glossary</p>
           </div>

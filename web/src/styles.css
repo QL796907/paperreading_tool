@@ -3,14 +3,19 @@
   --desk-edge: #1a1510;
   --paper: #f4ecd8;
   --paper-aged: #ebe2cc;
-  --paper-shadow: rgba(44, 36, 28, 0.18);
   --ink: #1f1a14;
   --ink-muted: #6b5e4e;
   --ink-faint: #a89880;
+  --seal: #2f4f3e;
+  --seal-soft: #e4ede7;
+  --seal-on-dark: #9bb5a6;
   --rule: #c45c48;
   --rule-soft: rgba(196, 92, 72, 0.35);
-  --accent: #2f4f3e;
-  --accent-soft: #e4ede7;
+  --stroke: rgba(47, 79, 62, 0.18);
+  --shadow: rgba(44, 36, 28, 0.14);
+  --accent: var(--seal);
+  --accent-soft: var(--seal-soft);
+  --paper-shadow: var(--shadow);
   --seal-pending: #8b6914;
   --seal-ai: #2f4f3e;
   --seal-hand: #5c4033;
@@ -63,7 +68,7 @@ button { cursor: pointer; }
   display: grid;
   grid-template-columns: 280px 14px 1fr;
   background: var(--paper);
-  box-shadow: 0 18px 40px var(--paper-shadow);
+  box-shadow: 0 12px 28px var(--shadow);
   position: relative;
   overflow: hidden;
 }
@@ -76,6 +81,20 @@ button { cursor: pointer; }
   min-height: 0;
 }
 
+.brand {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 2px 12px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.brand img {
+  width: 36px;
+  height: 36px;
+  grid-row: 1 / span 2;
+}
+
 .brand h1 {
   margin: 0;
   font-size: 28px;
@@ -85,7 +104,7 @@ button { cursor: pointer; }
 }
 
 .eyebrow {
-  margin: 4px 0 20px;
+  margin: 0;
   font-family: "EB Garamond", Georgia, serif;
   font-size: 13px;
   color: var(--ink-muted);
@@ -129,7 +148,7 @@ button { cursor: pointer; }
 }
 
 .dates button.active {
-  background: var(--paper);
+  background: var(--seal-soft);
   color: var(--ink);
 }
 
@@ -140,14 +159,14 @@ button { cursor: pointer; }
   top: 8px;
   width: 4px;
   height: 20px;
-  background: var(--accent);
+  background: var(--seal);
 }
 
 .dates button.active.dim {
   opacity: 0.55;
 }
 
-.dates button.active em { color: var(--accent); }
+.dates button.active em { color: var(--seal); }
 
 .index-foot {
   margin: 12px 0 0;
@@ -227,7 +246,7 @@ button { cursor: pointer; }
 .sheet-form input:focus,
 .sheet-form textarea:focus,
 .entry textarea:focus {
-  border-bottom-color: var(--rule);
+  border-bottom-color: var(--seal);
 }
 
 .search .clear {
@@ -252,12 +271,12 @@ button { cursor: pointer; }
 }
 
 .solid {
-  background: var(--accent);
+  background: var(--seal);
   color: var(--paper);
 }
 
 .ghost {
-  border-color: var(--ink-faint);
+  border-color: var(--seal);
   color: var(--ink);
 }
 
@@ -273,7 +292,7 @@ button { cursor: pointer; }
   color: var(--ink-muted);
 }
 
-.text-btn:hover,
+.text-btn:hover { color: var(--seal); }
 .danger-text:hover { color: var(--ink); }
 
 .danger-text { color: var(--danger); }
@@ -345,7 +364,7 @@ button { cursor: pointer; }
   font-size: 13px;
 }
 
-.written-at:hover { color: var(--rule); }
+.written-at:hover { color: var(--seal); }
 
 .definition {
   margin: 10px 0 0;
@@ -394,7 +413,7 @@ blockquote {
   right: 0;
   top: 22px;
   background: var(--paper);
-  border: 1px solid var(--rule-soft);
+  border: 1px solid var(--stroke);
   min-width: 96px;
   z-index: 3;
   display: grid;
@@ -481,7 +500,7 @@ blockquote {
 .check input {
   width: 14px;
   height: 14px;
-  accent-color: var(--accent);
+  accent-color: var(--seal);
 }
 
 .sheet-form textarea { resize: vertical; }
@@ -561,7 +580,7 @@ blockquote {
   font-weight: 600;
 }
 
-.reader-bar .text-btn { color: var(--ink-faint); }
+.reader-bar .text-btn { color: var(--seal-on-dark); }
 .reader-bar .text-btn:hover { color: var(--paper); }
 
 .page-num { justify-self: end; }
@@ -585,8 +604,8 @@ blockquote {
 }
 
 .page-picker button.active {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--seal);
+  border-color: var(--seal);
 }
 
 .reader-paper {
@@ -735,5 +754,5 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
   outline: none;
-  box-shadow: 0 1px 0 var(--rule);
+  box-shadow: 0 1px 0 var(--seal);
 }
