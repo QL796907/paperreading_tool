@@ -20,6 +20,7 @@ import {
 export default function App() {
   const [terms, setTerms] = useState([]);
   const [settings, setSettings] = useState(null);
+  const [sync, setSync] = useState(null);
   const [query, setQuery] = useState("");
   const [activeDate, setActiveDate] = useState(todayStamp());
   const [flashId, setFlashId] = useState("");
@@ -38,6 +39,7 @@ export default function App() {
     const data = await api.state();
     setTerms(data.terms);
     setSettings(data.settings);
+    setSync(data.sync || null);
     setLoading(false);
     setToastRetry(null);
   }, []);
@@ -258,6 +260,14 @@ export default function App() {
           </nav>
           <p className="index-foot">
             共 {dayCount} 天 · {terms.length} 词
+            {syncFootLabel(sync) ? (
+              <>
+                <br />
+                <button type="button" className="text-btn sync-foot" onClick={openSettings}>
+                  {syncFootLabel(sync)}
+                </button>
+              </>
+            ) : null}
           </p>
         </aside>
 
@@ -375,9 +385,11 @@ export default function App() {
       {showSettings && settings ? (
         <SettingsModal
           settings={settings}
+          sync={sync}
           onClose={() => setShowSettings(false)}
-          onSaved={(next) => {
+          onSaved={(next, nextSync) => {
             setSettings(next);
+            if (nextSync) setSync(nextSync);
             setShowSettings(false);
             setToast("设置已保存");
           }}
@@ -402,4 +414,21 @@ export default function App() {
       <Toast message={toast} onRetry={toastRetry} />
     </div>
   );
+}
+
+function syncFootLabel(sync) {
+  if (!sync?.enabled) return "";
+  if (sync.busy) return "正在同步…";
+  if (sync.lastError) return "同步失败，打开设置";
+  if (!sync.configured) return "坚果云还没填完";
+  if (!sync.lastSyncedAt) return "等待同步";
+  const ts = Date.parse(sync.lastSyncedAt);
+  if (Number.isNaN(ts)) return "已开启同步";
+  const delta = Date.now() - ts;
+  if (delta < 60_000) return "刚同步过";
+  if (delta < 3_600_000) return `${Math.max(1, Math.floor(delta / 60_000))} 分钟前同步`;
+  const when = new Date(ts);
+  const hh = String(when.getHours()).padStart(2, "0");
+  const mm = String(when.getMinutes()).padStart(2, "0");
+  return `上次同步 ${hh}:${mm}`;
 }

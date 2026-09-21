@@ -14,6 +14,11 @@ const DEFAULT_SETTINGS = {
   autoExplain: false,
   systemPrompt:
     "你是学术论文阅读助手。请用简洁、准确的中文解释用户给出的专业术语。\n要求：\n1. 先给一句话定义；\n2. 若提供了论文标题或原文上下文，结合该语境说明它在文中可能指什么；\n3. 必要时用一两句点出易混淆概念；\n4. 不要编造参考文献或具体数字；\n5. 全文控制在 180 字以内，不要用 Markdown 标题。",
+  webdavEnabled: false,
+  webdavUrl: "https://dav.jianguoyun.com/dav/",
+  webdavUser: "",
+  webdavPassword: "",
+  webdavPath: "paper-glossary/terms.json",
 };
 
 function localDate(d = new Date()) {
@@ -53,13 +58,31 @@ async function writeJson(file, value) {
 }
 
 export const store = {
+  async readEnvelope() {
+    const data = await readJson(termsFile, { terms: [], updatedAt: null });
+    return {
+      terms: Array.isArray(data.terms) ? data.terms : [],
+      updatedAt: typeof data.updatedAt === "string" ? data.updatedAt : null,
+    };
+  },
+
+  async writeEnvelope(envelope) {
+    await writeJson(termsFile, {
+      terms: envelope.terms || [],
+      updatedAt: envelope.updatedAt || new Date().toISOString(),
+    });
+  },
+
   async allTerms() {
-    const data = await readJson(termsFile, { terms: [] });
-    return data.terms || [];
+    const { terms } = await this.readEnvelope();
+    return terms;
   },
 
   async saveTerms(terms) {
-    await writeJson(termsFile, { terms });
+    await this.writeEnvelope({
+      terms,
+      updatedAt: new Date().toISOString(),
+    });
   },
 
   async getSettings() {
@@ -69,10 +92,12 @@ export const store = {
 
   async saveSettings(patch) {
     const current = await this.getSettings();
-    const next = {
-      ...current,
-      ...patch,
-    };
+    const next = { ...current };
+    for (const key of Object.keys(DEFAULT_SETTINGS)) {
+      if (patch && Object.prototype.hasOwnProperty.call(patch, key)) {
+        next[key] = patch[key];
+      }
+    }
     await writeJson(settingsFile, next);
     return next;
   },

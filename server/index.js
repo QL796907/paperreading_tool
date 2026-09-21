@@ -5,6 +5,14 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { store } from "./store.js";
 import { explainTerm } from "./ai.js";
+import {
+  getSyncStatus,
+  queuePush,
+  setSyncListener,
+  startSyncLoop,
+  syncNow,
+  testConnection,
+} from "./sync.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3780;
@@ -36,7 +44,7 @@ app.get("/api/state", asyncHandler(async (_req, res) => {
     store.allTerms(),
     store.getSettings(),
   ]);
-  res.json({ terms, settings });
+  res.json({ terms, settings, sync: getSyncStatus(settings) });
 }));
 
 app.get("/api/events", (req, res) => {
@@ -65,10 +73,12 @@ app.post("/api/terms", asyncHandler(async (req, res) => {
         definitionSource: "ai",
       });
       broadcast({ type: "changed", id: updated.id });
+      queuePush("local-change");
       res.status(created ? 201 : 200).json({ term: updated, created });
       return;
     } catch (err) {
       broadcast({ type: "changed", id: term.id });
+      queuePush("local-change");
       res.status(created ? 201 : 200).json({
         term,
         created,
@@ -79,18 +89,21 @@ app.post("/api/terms", asyncHandler(async (req, res) => {
   }
 
   broadcast({ type: "changed", id: term.id });
+  queuePush("local-change");
   res.status(created ? 201 : 200).json({ term, created });
 }));
 
 app.patch("/api/terms/:id", asyncHandler(async (req, res) => {
   const term = await store.updateTerm(req.params.id, req.body || {});
   broadcast({ type: "changed", id: term.id });
+  queuePush("local-change");
   res.json({ term });
 }));
 
 app.delete("/api/terms/:id", asyncHandler(async (req, res) => {
   await store.deleteTerm(req.params.id);
   broadcast({ type: "changed", id: req.params.id });
+  queuePush("local-change");
   res.json({ ok: true });
 }));
 
@@ -108,13 +121,38 @@ app.post("/api/terms/:id/explain", asyncHandler(async (req, res) => {
     definitionSource: "ai",
   });
   broadcast({ type: "changed", id: updated.id });
+  queuePush("local-change");
   res.json({ term: updated });
 }));
 
 app.put("/api/settings", asyncHandler(async (req, res) => {
   const settings = await store.saveSettings(req.body || {});
   broadcast({ type: "settings" });
-  res.json({ settings });
+  if (settings.webdavEnabled) queuePush("local-change");
+  res.json({ settings, sync: getSyncStatus(settings) });
+}));
+
+app.get("/api/sync", asyncHandler(async (_req, res) => {
+  const settings = await store.getSettings();
+  res.json({ sync: getSyncStatus(settings) });
+}));
+
+app.post("/api/sync/test", asyncHandler(async (req, res) => {
+  const body = req.body || {};
+  const settings = await store.getSettings();
+  const result = await testConnection({
+    webdavUrl: body.webdavUrl ?? settings.webdavUrl,
+    webdavUser: body.webdavUser ?? settings.webdavUser,
+    webdavPassword: body.webdavPassword || settings.webdavPassword,
+    webdavPath: body.webdavPath ?? settings.webdavPath,
+  });
+  res.json(result);
+}));
+
+app.post("/api/sync/now", asyncHandler(async (_req, res) => {
+  const result = await syncNow("manual");
+  broadcast({ type: "sync" });
+  res.json(result);
 }));
 
 app.use((err, _req, res, _next) => {
@@ -139,4 +177,6 @@ if (fs.existsSync(distDir)) {
 
 app.listen(PORT, "127.0.0.1", () => {
   console.log(`术语本已启动：http://127.0.0.1:${PORT}`);
+  setSyncListener(() => broadcast({ type: "sync" }));
+  startSyncLoop();
 });

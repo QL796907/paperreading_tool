@@ -44,4 +44,11 @@ export const api = {
       headers,
       body: JSON.stringify(body),
     }),
+  testSync: (body) =>
+    request("/api/sync/test", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body || {}),
+    }),
+  syncNow: () => request("/api/sync/now", { method: "POST" }),
 };
