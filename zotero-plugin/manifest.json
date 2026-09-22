@@ -1,12 +1,13 @@
 {
   "manifest_version": 2,
   "name": "术语本 for Zotero",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "在 PDF 中选中术语，一键加入本地术语笔记本",
   "author": "hy",
   "applications": {
     "zotero": {
       "id": "paper-glossary@local",
+      "update_url": "https://raw.githubusercontent.com/QL796907/paperreading_tool/main/updates/zotero.json",
       "strict_min_version": "7.0",
       "strict_max_version": "8.*"
     }

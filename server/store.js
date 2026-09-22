@@ -3,9 +3,18 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dataDir = path.join(__dirname, "..", "data");
-const termsFile = path.join(dataDir, "terms.json");
-const settingsFile = path.join(dataDir, "settings.json");
+
+function getDataDir() {
+  return process.env.GLOSSARY_DATA_DIR || path.join(__dirname, "..", "data");
+}
+
+function termsPath() {
+  return path.join(getDataDir(), "terms.json");
+}
+
+function settingsPath() {
+  return path.join(getDataDir(), "settings.json");
+}
 
 const DEFAULT_SETTINGS = {
   apiBaseUrl: "https://api.deepseek.com/v1",
@@ -37,7 +46,7 @@ function wordKey(s) {
 }
 
 async function ensureDir() {
-  await fs.mkdir(dataDir, { recursive: true });
+  await fs.mkdir(getDataDir(), { recursive: true });
 }
 
 async function readJson(file, fallback) {
@@ -59,7 +68,7 @@ async function writeJson(file, value) {
 
 export const store = {
   async readEnvelope() {
-    const data = await readJson(termsFile, { terms: [], updatedAt: null });
+    const data = await readJson(termsPath(), { terms: [], updatedAt: null });
     return {
       terms: Array.isArray(data.terms) ? data.terms : [],
       updatedAt: typeof data.updatedAt === "string" ? data.updatedAt : null,
@@ -67,7 +76,7 @@ export const store = {
   },
 
   async writeEnvelope(envelope) {
-    await writeJson(termsFile, {
+    await writeJson(termsPath(), {
       terms: envelope.terms || [],
       updatedAt: envelope.updatedAt || new Date().toISOString(),
     });
@@ -86,7 +95,7 @@ export const store = {
   },
 
   async getSettings() {
-    const saved = await readJson(settingsFile, {});
+    const saved = await readJson(settingsPath(), {});
     return { ...DEFAULT_SETTINGS, ...saved };
   },
 
@@ -98,7 +107,7 @@ export const store = {
         next[key] = patch[key];
       }
     }
-    await writeJson(settingsFile, next);
+    await writeJson(settingsPath(), next);
     return next;
   },
 

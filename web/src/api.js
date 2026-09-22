@@ -1,3 +1,6 @@
+import { isNativeApp } from "./platform.js";
+import { nativeApi } from "./nativeApi.js";
+
 const headers = { "Content-Type": "application/json" };
 
 function fail(err) {
@@ -22,7 +25,7 @@ async function request(url, options) {
   }
 }
 
-export const api = {
+const httpApi = {
   state: () => request("/api/state"),
   createTerm: (body) =>
     request("/api/terms", {
@@ -52,3 +55,10 @@ export const api = {
     }),
   syncNow: () => request("/api/sync/now", { method: "POST" }),
 };
+
+export const api = new Proxy(httpApi, {
+  get(_target, prop) {
+    const backend = isNativeApp() ? nativeApi : httpApi;
+    return backend[prop];
+  },
+});

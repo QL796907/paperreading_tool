@@ -16,7 +16,6 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3780;
-const distDir = path.join(__dirname, "..", "web", "dist");
 
 const app = express();
 app.use(cors({ origin: true }));
@@ -160,23 +159,47 @@ app.use((err, _req, res, _next) => {
   res.status(status).json({ error: err.message || "服务器出错了" });
 });
 
-if (fs.existsSync(distDir)) {
-  app.use(express.static(distDir));
-  app.get("*", (req, res, next) => {
-    if (req.path.startsWith("/api")) return next();
-    res.sendFile(path.join(distDir, "index.html"));
-  });
-} else {
-  app.get("/", (_req, res) => {
-    res.type("html").send(`<!doctype html>
+let httpServer = null;
+
+function attachStatic() {
+  const distDir =
+    process.env.GLOSSARY_DIST_DIR || path.join(__dirname, "..", "web", "dist");
+  if (fs.existsSync(distDir)) {
+    app.use(express.static(distDir));
+    app.get("*", (req, res, next) => {
+      if (req.path.startsWith("/api")) return next();
+      res.sendFile(path.join(distDir, "index.html"));
+    });
+  } else {
+    app.get("/", (_req, res) => {
+      res.type("html").send(`<!doctype html>
 <meta charset="utf-8">
 <meta http-equiv="refresh" content="0;url=http://127.0.0.1:5173/">
 <p>正在打开术语本。开发模式请使用 <a href="http://127.0.0.1:5173">http://127.0.0.1:5173</a>。若打不开，请先运行 <code>npm run dev</code>。</p>`);
+    });
+  }
+}
+
+export function startServer() {
+  if (httpServer) {
+    return Promise.resolve({ server: httpServer, port: PORT });
+  }
+  attachStatic();
+  return new Promise((resolve, reject) => {
+    const server = app.listen(PORT, "127.0.0.1", () => {
+      console.log(`术语本已启动：http://127.0.0.1:${PORT}`);
+      setSyncListener(() => broadcast({ type: "sync" }));
+      startSyncLoop();
+      httpServer = server;
+      resolve({ server, port: PORT });
+    });
+    server.on("error", reject);
   });
 }
 
-app.listen(PORT, "127.0.0.1", () => {
-  console.log(`术语本已启动：http://127.0.0.1:${PORT}`);
-  setSyncListener(() => broadcast({ type: "sync" }));
-  startSyncLoop();
-});
+if (!process.versions.electron) {
+  startServer().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

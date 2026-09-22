@@ -1,0 +1,16 @@
+{
+  "appId": "com.ql796907.paperglossary",
+  "appName": "术语本",
+  "webDir": "web/dist",
+  "android": {
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}

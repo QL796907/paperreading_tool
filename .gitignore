@@ -2,6 +2,14 @@ node_modules/
 data/*.json
 !data/.gitkeep
 web/dist/
+release/
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/keystore.properties
+android/*.keystore
+android/*.jks
 *.xpi
 .DS_Store
 Thumbs.db

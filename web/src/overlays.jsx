@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { api } from "./api.js";
+import { APP_VERSION, isAndroidApp, isNativeApp } from "./platform.js";
+import { checkAppUpdate, downloadAndInstall } from "./apkUpdate.js";
 
 export function Overlay({ children, onClose, wide }) {
   return (
@@ -117,15 +119,19 @@ export function AddModal({ settings, onClose, onCreated }) {
   );
 }
 
-export function SettingsModal({ settings, sync, onClose, onSaved }) {
+export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
   const [draft, setDraft] = useState(settings);
   const [busy, setBusy] = useState(false);
   const [testBusy, setTestBusy] = useState(false);
   const [syncBusy, setSyncBusy] = useState(false);
+  const [updateBusy, setUpdateBusy] = useState(false);
   const [error, setError] = useState("");
   const [note, setNote] = useState(sync?.lastMessage || "");
+  const [updateNote, setUpdateNote] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [showDav, setShowDav] = useState(false);
+  const native = isNativeApp();
+  const android = isAndroidApp();
 
   function setField(key, value) {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -178,6 +184,32 @@ export function SettingsModal({ settings, sync, onClose, onSaved }) {
     }
   }
 
+  async function checkUpdate() {
+    setUpdateBusy(true);
+    setError("");
+    setUpdateNote("正在检查…");
+    try {
+      const info = await checkAppUpdate();
+      if (!info.newer) {
+        setUpdateNote(`已经是最新版 ${info.current}`);
+        return;
+      }
+      setUpdateNote(`发现 ${info.latest}，正在下载…`);
+      await downloadAndInstall(info.url, (p) => {
+        if (!p?.total) return;
+        const pct = Math.min(99, Math.round((p.received / p.total) * 100));
+        setUpdateNote(`正在下载 ${info.latest}（${pct}%）`);
+      });
+      setUpdateNote("已开始安装。系统会弹出安装确认。");
+      onToast?.("正在安装新版本");
+    } catch (err) {
+      setError(err.message);
+      setUpdateNote("");
+    } finally {
+      setUpdateBusy(false);
+    }
+  }
+
   return (
     <Overlay onClose={onClose} wide="wide">
       <form className="sheet-form" onSubmit={submit}>
@@ -224,14 +256,16 @@ export function SettingsModal({ settings, sync, onClose, onSaved }) {
             onChange={(e) => setField("systemPrompt", e.target.value)}
           />
         </label>
-        <label className="check">
-          <input
-            type="checkbox"
-            checked={Boolean(draft.autoExplain)}
-            onChange={(e) => setField("autoExplain", e.target.checked)}
-          />
-          Zotero 新词自动解析
-        </label>
+        {native ? null : (
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={Boolean(draft.autoExplain)}
+              onChange={(e) => setField("autoExplain", e.target.checked)}
+            />
+            Zotero 新词自动解析
+          </label>
+        )}
 
         <section className="settings-block">
           <h3>坚果云同步</h3>
@@ -303,6 +337,27 @@ export function SettingsModal({ settings, sync, onClose, onSaved }) {
           {note ? <p className="sync-note">{note}</p> : null}
         </section>
 
+        {android ? (
+          <section className="settings-block">
+            <h3>应用更新</h3>
+            <p className="hint">
+              当前版本 {APP_VERSION}。手机安装包从 GitHub Releases 检查、下载并交给系统安装。Zotero
+              插件不走这里，它在 Zotero 的「插件」里自己更新。
+            </p>
+            <div className="sync-actions">
+              <button
+                type="button"
+                className="ghost"
+                onClick={checkUpdate}
+                disabled={updateBusy || busy}
+              >
+                {updateBusy ? "请稍候…" : "检查并安装更新"}
+              </button>
+            </div>
+            {updateNote ? <p className="sync-note">{updateNote}</p> : null}
+          </section>
+        ) : null}
+
         {error ? <p className="field-error">{error}</p> : null}
         <div className="sheet-actions">
           <button type="button" className="ghost" onClick={onClose}>
@@ -351,7 +406,7 @@ export function Toast({ message, onRetry }) {
   );
 }
 
-export function EmptyState({ searching, onRead }) {
+export function EmptyState({ searching, onRead, native }) {
   if (searching) {
     return (
       <section className="empty">
@@ -363,9 +418,19 @@ export function EmptyState({ searching, onRead }) {
     <section className="empty">
       <p className="empty-lead">今天的纸页还是空白。</p>
       <p>
-        在 Zotero 里选中生词，点「加入术语本」；
-        <br />
-        或按 Ctrl+N，手写第一条。
+        {native ? (
+          <>
+            点「添加术语」记下今天的生词。
+            <br />
+            在设置里打开坚果云，就能和电脑上的术语本共用一份。
+          </>
+        ) : (
+          <>
+            在 Zotero 里选中生词，点「加入术语本」；
+            <br />
+            或按 Ctrl+N，手写第一条。
+          </>
+        )}
       </p>
       <i className="empty-rule" />
       {onRead ? (

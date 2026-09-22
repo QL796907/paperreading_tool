@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "./api.js";
+import { isAndroidApp, isNativeApp } from "./platform.js";
+import { checkAppUpdate } from "./apkUpdate.js";
 import TermCard from "./TermCard.jsx";
 import ReadingMode from "./ReadingMode.jsx";
 import {
@@ -56,12 +58,27 @@ export default function App() {
   }, [load]);
 
   useEffect(() => {
+    if (isNativeApp()) return undefined;
     const stream = new EventSource("/api/events");
     stream.onmessage = () => {
       load().catch(() => {});
     };
     return () => stream.close();
   }, [load]);
+
+  useEffect(() => {
+    if (!isAndroidApp()) return undefined;
+    let cancelled = false;
+    checkAppUpdate()
+      .then((info) => {
+        if (cancelled || !info.newer) return;
+        setToast(`有新版本 ${info.latest}，可在设置里下载安装`);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -357,6 +374,7 @@ export default function App() {
           ) : (
             <EmptyState
               searching={searching}
+              native={isNativeApp()}
               onRead={searching ? undefined : enterReading}
             />
           )}
@@ -393,6 +411,7 @@ export default function App() {
             setShowSettings(false);
             setToast("设置已保存");
           }}
+          onToast={setToast}
         />
       ) : null}
 

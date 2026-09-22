@@ -16,7 +16,7 @@
 
 电脑开发时还有 Express（`server/`，端口 3780）+ Vite（`web/`，5173）。手机 APK **不跑 Express**，走 `web/src/native*.js`。
 
-当前对外版本仍是 `1.0.0` / `versionCode` 1。日常改功能不要 bump；只有 hy 说发版才改。
+当前对外版本是 **`1.0.1` / `versionCode` 2**（2026-09-23 首次 GitHub 三件套发版）。日常改功能不要 bump；只有 hy 说发版才改。下次发版：`1.0.1` → `1.0.2`，`versionCode` 2 → 3。
 
 ## 目录
 
@@ -58,7 +58,3 @@
 - `npm run plugin:pack` 更新 `zotero-plugin/manifest.json` 所用版本与 `updates/zotero.json` 的 sha256
 - GitHub Release 资源：`paper-glossary-Setup-<ver>.exe`、`.exe.blockmap`、`latest.yml`、`paper-glossary-<ver>.apk`、`paper-glossary.xpi`
 - `README.md`：首次整篇写成对外页；之后改版本、链接、新能力
-
-## 本轮之后未提交的工作区
-
-写本文件时，Electron / Android / Capacitor 相关改动仍大量停在工作区、尚未进 git（上一轮在「未开口不提交」规则下完成）。后续若 hy 要推送或收进 main，再单独处理，不要和无关的小改动混提交。
