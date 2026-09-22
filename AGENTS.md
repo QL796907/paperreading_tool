@@ -45,10 +45,11 @@
 
 1. **一轮目标做完就 commit 到 `main`**。不开分支、不走 PR。不要 push，除非 hy 说 push。
 2. **发版必须三件套**：Windows exe + APK + Zotero xpi。同时 bump `package.json` 的 `version`，APK 再把 `versionCode` +1。未说发版不要改版本。
-3. 没有 `AGENTS.md` 就创建；每轮结束后只更新有变化的段落。
-4. **验收时 Android 必须实际编过** 才算完。没 SDK、Gradle 挂了、缺 keystore：必须说明，不能假装做完。
-5. APK 签名：`android/glossary.keystore` + `android/keystore.properties`，不进 git。换电脑先拷这两份，**禁止默默新建钥匙**。
-6. 不要把 API Key、WebDAV 密码、keystore 密码写进仓库或聊天。
+3. **第一次发版写精美 `README.md`**（对外产品页）；之后每次发版增量更新版本号、下载链接和新功能。没改 README 不算发完。日常改功能不要动 README。
+4. 没有 `AGENTS.md` 就创建；每轮结束后只更新有变化的段落。
+5. **验收时 Android 必须实际编过** 才算完。没 SDK、Gradle 挂了、缺 keystore：必须说明，不能假装做完。
+6. APK 签名：`android/glossary.keystore` + `android/keystore.properties`，不进 git。换电脑先拷这两份，**禁止默默新建钥匙**。
+7. 不要把 API Key、WebDAV 密码、keystore 密码写进仓库或聊天。
 
 ## 发版时改什么
 
@@ -56,6 +57,7 @@
 - `updates/android.json`：`version`、`versionCode`+1、`url`、`notes`
 - `npm run plugin:pack` 更新 `zotero-plugin/manifest.json` 所用版本与 `updates/zotero.json` 的 sha256
 - GitHub Release 资源：`paper-glossary-Setup-<ver>.exe`、`.exe.blockmap`、`latest.yml`、`paper-glossary-<ver>.apk`、`paper-glossary.xpi`
+- `README.md`：首次整篇写成对外页；之后改版本、链接、新能力
 
 ## 本轮之后未提交的工作区
 

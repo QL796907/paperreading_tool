@@ -1,0 +1,28 @@
+---
+description: 第一次发版写精美 README；之后每次发版更新 README
+alwaysApply: true
+---
+
+# 发版时的 README
+
+只有 hy 说 **发版** 时才动用户 README。日常改功能不要为了交差去改 `README.md`。
+
+## 第一次发版
+
+把根目录 `README.md` **整篇写成对外产品页**（中文、给使用者看，不是 `AGENTS.md` 的副本）：
+
+- 开篇一眼能看懂：这是论文阅读用的术语本，三端分别干什么
+- 当前版本、GitHub Release 下载：Windows exe、Android apk、Zotero xpi
+- 怎么装、怎么用、怎么更新；电脑 Zotero 划词、手机 WebDAV、AI 设置
+- 排版干净：标题层级、表格、必要截图；可加仓库徽章
+- 不要写密钥、keystore 密码、内部目录细账、agent 硬规则
+
+## 之后每次发版
+
+在现有 README 上 **增量更新**，不要整篇重写：
+
+- 版本号、安装包文件名、Release 链接改成这一版
+- 新功能、变了的安装/更新步骤写进去
+- 过时段落删掉或改对
+
+没改 README 的发版不算发完。

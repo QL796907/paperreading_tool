@@ -21,4 +21,6 @@ alwaysApply: true
 
 密钥：APK 必须用已有的 `android/glossary.keystore`，没有就停，不要新建。
 
+同时写/更新根目录 `README.md`（见 `release-readme` 规则）。没改 README 不算发完。
+
 挂 GitHub Release 或 `git push` 仍要 hy 开口。
