@@ -1,0 +1,24 @@
+---
+description: 发版必须同时打 Windows 安装包、Android APK、Zotero xpi，并改版本号
+alwaysApply: true
+---
+
+# 发版：三件套一起出
+
+只有 hy 明确说 **发版** 时才改版本、打安装包。日常改功能不要动版本号。
+
+发版必须 **三件都打出来**，缺一件不算发完：
+
+1. Windows：`npm run dist`（下不动 GitHub 用 `dist:proxy`）→ `release/paper-glossary-Setup-<version>.exe`（外加 `.blockmap`、`latest.yml`）
+2. Android：`versionCode` +1 后 `npm run apk`（或 `apk:proxy`）→ `release/paper-glossary-<version>.apk`
+3. Zotero：`npm run plugin:pack` → `paper-glossary.xpi`（脚本会刷新 `updates/zotero.json`）
+
+版本：
+
+- `package.json` 的 `version` 按 semver 加（通常 `1.0.0` → `1.0.1`）
+- `updates/android.json` 的 `versionCode` **必须 +1**（整数，Windows 不用这个字段）
+- 插件版本跟 `package.json`，由 `plugin:pack` 写入 `updates/zotero.json`
+
+密钥：APK 必须用已有的 `android/glossary.keystore`，没有就停，不要新建。
+
+挂 GitHub Release 或 `git push` 仍要 hy 开口。

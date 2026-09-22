@@ -1,0 +1,15 @@
+---
+description: 一轮更改目标做完后直接 commit 到 main，不开分支、不走 PR
+alwaysApply: true
+---
+
+# Git：做完就提交 main
+
+本仓库覆盖「没明确说提交就不要 commit」的默认习惯。
+
+- 每一轮更改目标做完（功能可用、验收通过、回复 hy 之前）：把本轮相关改动 **commit 到 `main`**。
+- **不要开分支。不要走 PR。** 就在当前 `main` 上 `git add` + `git commit`。
+- 只提交本轮真正改过的文件。不要顺手把上一轮未提交的大范围改动塞进这次。
+- 不要提交密钥、词条数据、安装包：`android/glossary.keystore`、`android/keystore.properties`、`.env`、`data/*.json`、`release/`、`*.xpi`。
+- **不要 push**，除非 hy 明确说 push / 推送 / 发到 GitHub。
+- 提交说明写「为什么」，1–2 句中文即可。

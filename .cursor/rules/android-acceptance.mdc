@@ -1,0 +1,13 @@
+---
+description: 验收时 Android 必须实际编过；编不了必须说明，不能假装做完
+alwaysApply: true
+---
+
+# Android 验收
+
+改了会进 APK 的东西（`web/`、`android/`、`native/`、Capacitor、发版脚本）时：**必须在本机真正编过** 才算完。跑 `npm run apk` 或 `apk:proxy`，看到 `release/paper-glossary-<version>.apk` 生成为准。
+
+- 编失败（没 SDK、`ANDROID_HOME` 空、Gradle 超时、缺 `glossary.keystore`）：**必须在回复里写明原因和失败点**，不要写「已完成」「APK 可用」。
+- 不要用「脚本写了所以应该能编」代替一次真实构建。
+- 纯文档 / 纯规则 / 只动 Zotero 插件源码且本轮不发版：可以不编 APK，但要写一句「本轮未编 Android，因为只改了 xxx」。
+- 发版时 APK 必须编过，编不过就停，不要只发 Windows 或只发 xpi。
