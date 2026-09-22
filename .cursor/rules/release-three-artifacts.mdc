@@ -9,7 +9,7 @@ alwaysApply: true
 
 发版必须 **三件都打出来**，缺一件不算发完：
 
-1. Windows：`npm run dist`（下不动 GitHub 用 `dist:proxy`）→ `release/paper-glossary-Setup-<version>.exe`（外加 `.blockmap`、`latest.yml`）
+1. Windows：`npm run dist`（下不动 GitHub 用 `dist:proxy`）→ `release/paper-glossary-Setup-<version>.exe`（外加 `.blockmap`、`latest.yml`，挂 Release 给自动更新用，**不要写进用户下载清单**）
 2. Android：`versionCode` +1 后 `npm run apk`（或 `apk:proxy`）→ `release/paper-glossary-<version>.apk`
 3. Zotero：`npm run plugin:pack` → `paper-glossary.xpi`（脚本会刷新 `updates/zotero.json`）
 

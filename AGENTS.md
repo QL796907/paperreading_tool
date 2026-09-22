@@ -56,5 +56,5 @@
 - `package.json` `version`
 - `updates/android.json`：`version`、`versionCode`+1、`url`、`notes`
 - `npm run plugin:pack` 更新 `zotero-plugin/manifest.json` 所用版本与 `updates/zotero.json` 的 sha256
-- GitHub Release 资源：`paper-glossary-Setup-<ver>.exe`、`.exe.blockmap`、`latest.yml`、`paper-glossary-<ver>.apk`、`paper-glossary.xpi`
+- GitHub Release 资源：`paper-glossary-Setup-<ver>.exe`、`.exe.blockmap`、`latest.yml`、`paper-glossary-<ver>.apk`、`paper-glossary.xpi`。`.blockmap` 和 `latest.yml` 必须挂上，但对外说明里写清楚：**使用者只下 exe**，那两份是给 `electron-updater` 自己读的。
 - `README.md`：首次整篇写成对外页；之后改版本、链接、新能力
