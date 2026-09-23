@@ -5,8 +5,9 @@ import { fileURLToPath } from "url";
 
 /**
  * 方案 E「绿框学印」唯一出图脚本。
- * 图形跟 web/public/icon.svg 同一套几何：奶油底、森林绿双线方印、墨色词条、朱红角点。
- * Android / Windows / favicon 都从这里出，避免再落到 Capacitor 默认蓝标。
+ * 图形对齐 hy 当初敲定的 Grokbot 示例：奶油圆角方印、森林绿双线框、
+ * 中间一本立着的墨色书（封面微掀）、朱红角点在右上。
+ * Android / Windows / favicon 都从这里出。
  */
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -118,15 +119,120 @@ function punchRounded(c, x, y, w, h, r, color) {
   fillRounded(c, x, y, w, h, r, color);
 }
 
+function inPolygon(px, py, pts) {
+  let n = 0;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i, i += 1) {
+    const yi = pts[i][1];
+    const yj = pts[j][1];
+    const xi = pts[i][0];
+    const xj = pts[j][0];
+    if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) n += 1;
+  }
+  return n % 2 === 1;
+}
+
+function fillPolygon(c, pts, color) {
+  let minX = c.size;
+  let minY = c.size;
+  let maxX = 0;
+  let maxY = 0;
+  for (const [x, y] of pts) {
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x);
+    maxY = Math.max(maxY, y);
+  }
+  const x0 = Math.max(0, Math.floor(minX));
+  const y0 = Math.max(0, Math.floor(minY));
+  const x1 = Math.min(c.size, Math.ceil(maxX));
+  const y1 = Math.min(c.size, Math.ceil(maxY));
+  const samples = [0.25, 0.75];
+  for (let py = y0; py < y1; py += 1) {
+    for (let px = x0; px < x1; px += 1) {
+      let n = 0;
+      for (const ox of samples) {
+        for (const oy of samples) {
+          if (inPolygon(px + ox, py + oy, pts)) n += 1;
+        }
+      }
+      mix(c.data, py * c.size + px, color, n / 4);
+    }
+  }
+}
+
+function distToSeg(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len2 = dx * dx + dy * dy || 1;
+  let t = ((px - x1) * dx + (py - y1) * dy) / len2;
+  t = Math.max(0, Math.min(1, t));
+  const qx = x1 + t * dx;
+  const qy = y1 + t * dy;
+  return Math.hypot(px - qx, py - qy);
+}
+
+function strokePolyline(c, pts, width, color) {
+  const hw = width / 2;
+  let minX = c.size;
+  let minY = c.size;
+  let maxX = 0;
+  let maxY = 0;
+  for (const [x, y] of pts) {
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x);
+    maxY = Math.max(maxY, y);
+  }
+  const x0 = Math.max(0, Math.floor(minX - hw - 1));
+  const y0 = Math.max(0, Math.floor(minY - hw - 1));
+  const x1 = Math.min(c.size, Math.ceil(maxX + hw + 1));
+  const y1 = Math.min(c.size, Math.ceil(maxY + hw + 1));
+  const samples = [0.25, 0.75];
+  for (let py = y0; py < y1; py += 1) {
+    for (let px = x0; px < x1; px += 1) {
+      let n = 0;
+      for (const ox of samples) {
+        for (const oy of samples) {
+          const x = px + ox;
+          const y = py + oy;
+          for (let i = 1; i < pts.length; i += 1) {
+            if (distToSeg(x, y, pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1]) <= hw) {
+              n += 1;
+              break;
+            }
+          }
+        }
+      }
+      mix(c.data, py * c.size + px, color, n / 4);
+    }
+  }
+}
+
+function drawBook(c, u) {
+  // Standing book + lifted cover polyline, traced from the Grokbot example.
+  punchRounded(c, 417 * u, 424 * u, 191 * u, 247 * u, 0, INK);
+  strokePolyline(
+    c,
+    [
+      [417 * u, 424 * u],
+      [508 * u, 348 * u],
+      [548 * u, 378 * u],
+      [610 * u, 378 * u],
+    ],
+    13 * u,
+    INK,
+  );
+}
+
 function drawSeal(c, { simplified = false } = {}) {
   const s = c.size;
   const u = s / 1024;
-  fillRounded(c, 0, 0, s, s, 98 * u, PAPER);
+  fillRounded(c, 0, 0, s, s, 112 * u, PAPER);
 
   if (simplified) {
-    const m = s * 0.16;
-    const t = Math.max(1.6, s * 0.08);
-    punchRounded(c, m, m, s - m * 2, s - m * 2, Math.max(1, s * 0.04), SEAL);
+    const m = s * 0.14;
+    const t = Math.max(1.5, s * 0.07);
+    punchRounded(c, m, m, s - m * 2, s - m * 2, Math.max(1, s * 0.03), SEAL);
     punchRounded(
       c,
       m + t,
@@ -136,26 +242,33 @@ function drawSeal(c, { simplified = false } = {}) {
       Math.max(0.5, s * 0.02),
       PAPER,
     );
-    const barX = s * 0.3;
-    const barW = s * 0.38;
-    punchRounded(c, barX, s * 0.32, barW, Math.max(2, s * 0.1), 0, INK);
-    punchRounded(c, barX, s * 0.48, barW * 0.82, Math.max(1.5, s * 0.07), 0, INK);
-    punchRounded(c, barX, s * 0.6, barW * 0.7, Math.max(1.5, s * 0.07), 0, [...INK.slice(0, 3), 190]);
-    const chop = Math.max(2, s * 0.1);
-    punchRounded(c, s * 0.68, s * 0.68, chop, chop, 0, RULE);
+    const bw = Math.max(4, s * 0.22);
+    const bh = Math.max(6, s * 0.3);
+    const bx = (s - bw) / 2;
+    const by = s * 0.4;
+    punchRounded(c, bx, by, bw, bh, 0, INK);
+    strokePolyline(
+      c,
+      [
+        [bx, by],
+        [s * 0.52, s * 0.26],
+        [s * 0.58, s * 0.32],
+        [bx + bw * 0.95, s * 0.32],
+      ],
+      Math.max(1.4, s * 0.055),
+      INK,
+    );
+    const chop = Math.max(2, s * 0.08);
+    punchRounded(c, s * 0.72, s * 0.22, chop, chop, 0, RULE);
     return;
   }
 
-  // Match web/public/icon.svg
-  punchRounded(c, 148 * u, 148 * u, 728 * u, 728 * u, 18 * u, SEAL);
-  punchRounded(c, (148 + 26) * u, (148 + 26) * u, (728 - 52) * u, (728 - 52) * u, 10 * u, PAPER);
-  punchRounded(c, 186 * u, 186 * u, 652 * u, 652 * u, 10 * u, SEAL);
-  punchRounded(c, (186 + 8) * u, (186 + 8) * u, (652 - 16) * u, (652 - 16) * u, 6 * u, PAPER);
-  punchRounded(c, 332 * u, 338 * u, 300 * u, 52 * u, 0, INK);
-  punchRounded(c, 332 * u, 428 * u, 248 * u, 22 * u, 0, INK);
-  punchRounded(c, 332 * u, 478 * u, 268 * u, 22 * u, 0, [...INK.slice(0, 3), 184]);
-  punchRounded(c, 332 * u, 528 * u, 210 * u, 22 * u, 0, [...INK.slice(0, 3), 128]);
-  punchRounded(c, 704 * u, 704 * u, 64 * u, 64 * u, 0, RULE);
+  punchRounded(c, 96 * u, 88 * u, 832 * u, 848 * u, 18 * u, SEAL);
+  punchRounded(c, (96 + 8) * u, (88 + 8) * u, (832 - 16) * u, (848 - 16) * u, 12 * u, PAPER);
+  punchRounded(c, 124 * u, 116 * u, 776 * u, 792 * u, 14 * u, SEAL);
+  punchRounded(c, (124 + 6) * u, (116 + 6) * u, (776 - 12) * u, (792 - 12) * u, 10 * u, PAPER);
+  drawBook(c, u);
+  punchRounded(c, 807 * u, 167 * u, 43 * u, 43 * u, 0, RULE);
 }
 
 function circleMask(src) {
@@ -375,34 +488,48 @@ function writeWebAndWindows() {
 
 function writeMasterSvg() {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="术语本">
-  <rect width="1024" height="1024" rx="98" fill="#F4ECD8"/>
-  <rect x="148" y="148" width="728" height="728" rx="18" fill="none" stroke="#2F4F3E" stroke-width="26"/>
-  <rect x="186" y="186" width="652" height="652" rx="10" fill="none" stroke="#2F4F3E" stroke-width="8"/>
-  <rect x="332" y="338" width="300" height="52" fill="#1F1A14"/>
-  <rect x="332" y="428" width="248" height="22" fill="#1F1A14"/>
-  <rect x="332" y="478" width="268" height="22" fill="#1F1A14" opacity="0.72"/>
-  <rect x="332" y="528" width="210" height="22" fill="#1F1A14" opacity="0.5"/>
-  <rect x="704" y="704" width="64" height="64" fill="#C45C48"/>
+  <rect width="1024" height="1024" rx="112" fill="#F4ECD8"/>
+  <rect x="96" y="88" width="832" height="848" rx="18" fill="none" stroke="#2F4F3E" stroke-width="8"/>
+  <rect x="124" y="116" width="776" height="792" rx="14" fill="none" stroke="#2F4F3E" stroke-width="6"/>
+  <rect x="417" y="424" width="191" height="247" fill="#1F1A14"/>
+  <polyline points="417,424 508,348 548,378 610,378" fill="none" stroke="#1F1A14" stroke-width="13" stroke-linejoin="miter" stroke-linecap="square"/>
+  <rect x="807" y="167" width="43" height="43" fill="#C45C48"/>
 </svg>
 `;
   fs.writeFileSync(path.join(root, "web", "public", "icon.svg"), svg);
   fs.writeFileSync(
     path.join(root, "web", "public", "favicon.svg"),
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="术语本">
-  <rect width="32" height="32" rx="3.5" fill="#F4ECD8"/>
-  <rect x="4" y="4" width="24" height="24" rx="1" fill="none" stroke="#2F4F3E" stroke-width="2"/>
-  <rect x="9" y="9.5" width="12" height="2.6" fill="#1F1A14"/>
-  <rect x="9" y="14" width="10" height="1.8" fill="#1F1A14"/>
-  <rect x="9" y="17.4" width="9" height="1.8" fill="#1F1A14" opacity="0.75"/>
-  <rect x="21" y="21" width="3.6" height="3.6" fill="#C45C48"/>
+  <rect width="32" height="32" rx="4" fill="#F4ECD8"/>
+  <rect x="4" y="4" width="24" height="24" rx="1.2" fill="none" stroke="#2F4F3E" stroke-width="1.7"/>
+  <rect x="12.4" y="13.4" width="7.2" height="9.4" fill="#1F1A14"/>
+  <polyline points="12.4,13.4 16.2,10.8 17.6,12 19.8,12" fill="none" stroke="#1F1A14" stroke-width="1.4" stroke-linejoin="miter" stroke-linecap="square"/>
+  <rect x="22.2" y="7.2" width="2.4" height="2.4" fill="#C45C48"/>
 </svg>
 `,
   );
 }
 
+function writePreviews() {
+  const out = path.join(root, "web", "public", "icons");
+  const winBg = canvas(720, DESK);
+  const winIcon = makeIcon(160);
+  const win = composeCentered(winBg, winIcon, 160);
+  writePng(path.join(out, "preview-windows.png"), win);
+
+  const phoneBg = canvas(720, [24, 24, 28, 255]);
+  const phoneIcon = makeIcon(176);
+  const phone = composeCentered(phoneBg, phoneIcon, 176);
+  writePng(path.join(out, "preview-android.png"), phone);
+
+  const phoneRound = composeCentered(phoneBg, circleMask(makeIcon(176)), 176);
+  writePng(path.join(out, "preview-android-round.png"), phoneRound);
+}
+
 writeMasterSvg();
 writeWebAndWindows();
+writePreviews();
 if (fs.existsSync(path.join(root, "android", "app", "src", "main", "res"))) {
   writeAndroid();
 }
-console.log("已按方案 E「绿框学印」重出 Web / Windows / Android 图标。");
+console.log("已按 Grokbot 示例重出绿框立书图标。");

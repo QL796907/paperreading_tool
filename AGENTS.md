@@ -16,7 +16,7 @@
 
 电脑开发时还有 Express（`server/`，端口 3780）+ Vite（`web/`，5173）。手机 APK **不跑 Express**，走 `web/src/native*.js`。
 
-应用图标以 `CURSOR-PROMPT-方案E绿框学印.md` 为准（奶油底 + 绿方印 + 墨色词条 + 朱红角点）。电脑、手机、启动页同一套，由 `scripts/make-icons.js` 出图；`android:setup` 会覆盖 Capacitor 默认蓝标。不要再手改各密度 PNG。
+应用图标以 hy 敲定的 Grokbot 示例为准：奶油圆角方印、森林绿双线框、立着的墨色书、封面是掀起的折线（不是词条横杠、也不是盖在书上的黑块）、朱红角点在右上。电脑、手机、启动页同一套，由 `scripts/make-icons.js` 出图；`android:setup` 会覆盖 Capacitor 默认蓝标。不要再手改各密度 PNG。
 
 当前对外版本是 **`1.0.2` / `versionCode` 3**（2026-09-23：电脑手机统一绿框学印图标）。日常改功能不要 bump；只有 hy 说发版才改。下次发版：`1.0.2` → `1.0.3`，`versionCode` 3 → 4。
 
