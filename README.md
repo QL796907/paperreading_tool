@@ -6,7 +6,7 @@
 
 读论文碰到不会的词，可以从 Zotero 里划一下，收进这本子。按日期一页页翻，解析能自己写，也可以让 AI 帮忙写。电脑和手机能看同一本。
 
-当前版本 **1.0.1**。
+当前版本 **1.0.2**。
 
 ## 下哪个
 
@@ -14,9 +14,9 @@
 
 | 你要用 | 点这里下 |
 | --- | --- |
-| Windows 电脑 | [术语本安装包](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.1/paper-glossary-Setup-1.0.1.exe) |
-| Android 手机 | [手机安装包](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.1/paper-glossary-1.0.1.apk) |
-| 在 Zotero 里划词加入 | [Zotero 插件](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.1/paper-glossary.xpi) |
+| Windows 电脑 | [术语本安装包](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.2/paper-glossary-Setup-1.0.2.exe) |
+| Android 手机 | [手机安装包](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.2/paper-glossary-1.0.2.apk) |
+| 在 Zotero 里划词加入 | [Zotero 插件](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.2/paper-glossary.xpi) |
 
 电脑那一页上如果还有 `.blockmap`、`latest.yml`，不用下载。
 

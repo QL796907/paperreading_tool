@@ -1,6 +1,6 @@
 {
-  "version": "1.0.1",
-  "versionCode": 2,
-  "url": "https://github.com/QL796907/paperreading_tool/releases/download/v1.0.1/paper-glossary-1.0.1.apk",
-  "notes": "桌面、手机、Zotero 插件首次一起发布。词条可走坚果云；关窗进托盘；手机可在设置里检查更新。"
+  "version": "1.0.2",
+  "versionCode": 3,
+  "url": "https://github.com/QL796907/paperreading_tool/releases/download/v1.0.2/paper-glossary-1.0.2.apk",
+  "notes": "电脑和手机改用同一枚绿框学印图标，启动页也一起换掉。"
 }

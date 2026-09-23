@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "术语本 for Zotero",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "在 PDF 中选中术语，一键加入本地术语笔记本",
   "author": "hy",
   "applications": {

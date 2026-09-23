@@ -18,7 +18,7 @@
 
 应用图标以 `CURSOR-PROMPT-方案E绿框学印.md` 为准（奶油底 + 绿方印 + 墨色词条 + 朱红角点）。电脑、手机、启动页同一套，由 `scripts/make-icons.js` 出图；`android:setup` 会覆盖 Capacitor 默认蓝标。不要再手改各密度 PNG。
 
-当前对外版本是 **`1.0.1` / `versionCode` 2**（2026-09-23 首次 GitHub 三件套发版）。日常改功能不要 bump；只有 hy 说发版才改。下次发版：`1.0.1` → `1.0.2`，`versionCode` 2 → 3。
+当前对外版本是 **`1.0.2` / `versionCode` 3**（2026-09-23：电脑手机统一绿框学印图标）。日常改功能不要 bump；只有 hy 说发版才改。下次发版：`1.0.2` → `1.0.3`，`versionCode` 3 → 4。
 
 ## 目录
 
