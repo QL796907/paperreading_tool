@@ -231,6 +231,7 @@ if (!fs.existsSync(path.join(androidDir, "app"))) {
   run("npx", ["cap", "add", "android"]);
 }
 run("npx", ["cap", "sync", "android"]);
+run("node", [path.join(root, "scripts", "make-icons.js")]);
 patchMainActivity();
 patchManifest();
 copyXml();
