@@ -6,7 +6,9 @@
 
 读论文碰到不会的词，可以从 Zotero 里划一下，收进这本子。按日期一页页翻，解析能自己写，也可以让 AI 帮忙写。电脑和手机能看同一本。
 
-当前版本 **1.0.2**。
+当前版本 **1.0.3**。
+
+这一版图标改成当初那本立着、封面微掀的书。设置里默认勾选「使用镜像下载更新」，国内下更新更稳；说明在 [gh.4o.pw](https://gh.4o.pw/docs)。不想用镜像，取消勾选即可。
 
 ## 下哪个
 
@@ -14,9 +16,9 @@
 
 | 你要用 | 点这里下 |
 | --- | --- |
-| Windows 电脑 | [术语本安装包](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.2/paper-glossary-Setup-1.0.2.exe) |
-| Android 手机 | [手机安装包](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.2/paper-glossary-1.0.2.apk) |
-| 在 Zotero 里划词加入 | [Zotero 插件](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.2/paper-glossary.xpi) |
+| Windows 电脑 | [术语本安装包](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.3/paper-glossary-Setup-1.0.3.exe) |
+| Android 手机 | [手机安装包](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.3/paper-glossary-1.0.3.apk) |
+| 在 Zotero 里划词加入 | [Zotero 插件](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.3/paper-glossary.xpi) |
 
 电脑那一页上如果还有 `.blockmap`、`latest.yml`，不用下载。
 
@@ -45,4 +47,4 @@
 - 关掉窗口不等于退出。Zotero 加不进去时，先看托盘里术语本还在不在。
 - 手机没有划词。词在电脑上加，再用坚果云同步过来。
 - 插件只连这台电脑上的术语本。电脑没开，或术语本已经退出，划词会失败。
-- 以后电脑会自己检查更新；手机请到设置里点「检查并安装更新」。
+- 以后电脑会自己检查更新；手机请到设置里点「检查并安装更新」。下得很慢或失败时，打开设置确认「使用镜像下载更新」是勾上的。
