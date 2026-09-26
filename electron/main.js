@@ -7,16 +7,20 @@ import {
   dialog,
   Notification,
   shell,
+  session,
 } from "electron";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import updater from "electron-updater";
+import { GITHUB_MIRROR_PREFIX, withGithubMirror } from "../web/src/githubMirror.js";
 
 const autoUpdater = updater.autoUpdater ?? updater;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, "..");
 const PORT = Number(process.env.PORT) || 3780;
+const UPDATE_OWNER = "QL796907";
+const UPDATE_REPO = "paperreading_tool";
 
 let mainWindow = null;
 let tray = null;
@@ -162,6 +166,60 @@ function rebuildTrayMenu() {
   );
 }
 
+function githubMirrorEnabled() {
+  try {
+    const dir = process.env.GLOSSARY_DATA_DIR;
+    if (!dir) return true;
+    const saved = JSON.parse(fs.readFileSync(path.join(dir, "settings.json"), "utf8"));
+    if (Object.prototype.hasOwnProperty.call(saved, "githubMirrorEnabled")) {
+      return saved.githubMirrorEnabled !== false;
+    }
+  } catch {
+    /* 还没写出设置文件时默认开镜像 */
+  }
+  return true;
+}
+
+function applyUpdateFeed() {
+  if (githubMirrorEnabled()) {
+    autoUpdater.setFeedURL({
+      provider: "generic",
+      url: `${GITHUB_MIRROR_PREFIX}https://github.com/${UPDATE_OWNER}/${UPDATE_REPO}/releases/latest/download`,
+    });
+    return;
+  }
+  autoUpdater.setFeedURL({
+    provider: "github",
+    owner: UPDATE_OWNER,
+    repo: UPDATE_REPO,
+  });
+}
+
+function setupGithubMirrorIntercept() {
+  session.defaultSession.webRequest.onBeforeRequest(
+    {
+      urls: [
+        "https://github.com/*",
+        "https://*.github.com/*",
+        "https://githubusercontent.com/*",
+        "https://*.githubusercontent.com/*",
+      ],
+    },
+    (details, callback) => {
+      if (!githubMirrorEnabled()) {
+        callback({});
+        return;
+      }
+      const next = withGithubMirror(details.url, true);
+      if (next === details.url) {
+        callback({});
+        return;
+      }
+      callback({ redirectURL: next });
+    },
+  );
+}
+
 function notify(title, body) {
   if (Notification.isSupported()) {
     new Notification({ title, body }).show();
@@ -174,6 +232,8 @@ function setupAutoUpdater() {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.autoRunAppAfterInstall = true;
+  setupGithubMirrorIntercept();
+  applyUpdateFeed();
 
   autoUpdater.on("update-available", (info) => {
     if (manualUpdateCheck) {
@@ -244,6 +304,7 @@ async function checkForUpdates(manual) {
   }
   manualUpdateCheck = manual;
   try {
+    applyUpdateFeed();
     await autoUpdater.checkForUpdates();
   } catch (err) {
     if (manual) {

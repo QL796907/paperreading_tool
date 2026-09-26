@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api } from "./api.js";
 import { APP_VERSION, isAndroidApp, isNativeApp } from "./platform.js";
 import { checkAppUpdate, downloadAndInstall } from "./apkUpdate.js";
+import { GITHUB_MIRROR_DOCS, githubMirrorOn } from "./githubMirror.js";
 
 export function Overlay({ children, onClose, wide }) {
   return (
@@ -189,7 +190,7 @@ export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
     setError("");
     setUpdateNote("正在检查…");
     try {
-      const info = await checkAppUpdate();
+      const info = await checkAppUpdate(draft);
       if (!info.newer) {
         setUpdateNote(`已经是最新版 ${info.current}`);
         return;
@@ -337,26 +338,45 @@ export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
           {note ? <p className="sync-note">{note}</p> : null}
         </section>
 
-        {android ? (
-          <section className="settings-block">
-            <h3>应用更新</h3>
-            <p className="hint">
-              当前版本 {APP_VERSION}。手机安装包从 GitHub Releases 检查、下载并交给系统安装。Zotero
-              插件不走这里，它在 Zotero 的「插件」里自己更新。
-            </p>
-            <div className="sync-actions">
-              <button
-                type="button"
-                className="ghost"
-                onClick={checkUpdate}
-                disabled={updateBusy || busy}
-              >
-                {updateBusy ? "请稍候…" : "检查并安装更新"}
-              </button>
-            </div>
-            {updateNote ? <p className="sync-note">{updateNote}</p> : null}
-          </section>
-        ) : null}
+        <section className="settings-block">
+          <h3>应用更新</h3>
+          <p className="hint">
+            当前版本 {APP_VERSION}。安装包从 GitHub Releases 下载。
+            {android
+              ? " 手机点下面检查并安装。Zotero 插件不走这里，它在 Zotero 的「插件」里自己更新。"
+              : " 电脑版会在后台检查，关掉窗口后自动装上。也可在托盘菜单点「检查更新」。"}
+          </p>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={githubMirrorOn(draft)}
+              onChange={(e) => setField("githubMirrorEnabled", e.target.checked)}
+            />
+            使用镜像下载更新
+          </label>
+          <p className="hint">
+            默认勾选。走{" "}
+            <a href={GITHUB_MIRROR_DOCS} target="_blank" rel="noreferrer">
+              gh.4o.pw
+            </a>{" "}
+            代下 GitHub 文件，国内网络更稳。说明见该页。取消勾选则直连 GitHub。电脑上请先保存，再检查更新。
+          </p>
+          {android ? (
+            <>
+              <div className="sync-actions">
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={checkUpdate}
+                  disabled={updateBusy || busy}
+                >
+                  {updateBusy ? "请稍候…" : "检查并安装更新"}
+                </button>
+              </div>
+              {updateNote ? <p className="sync-note">{updateNote}</p> : null}
+            </>
+          ) : null}
+        </section>
 
         {error ? <p className="field-error">{error}</p> : null}
         <div className="sheet-actions">

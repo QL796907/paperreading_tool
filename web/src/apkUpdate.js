@@ -1,6 +1,7 @@
 import { registerPlugin } from "@capacitor/core";
 import { httpRequest } from "./http.js";
 import { APP_VERSION, isAndroidApp } from "./platform.js";
+import { githubMirrorOn, withGithubMirror } from "./githubMirror.js";
 
 const MANIFEST_URL =
   "https://raw.githubusercontent.com/QL796907/paperreading_tool/main/updates/android.json";
@@ -35,8 +36,9 @@ export async function currentAppVersion() {
   }
 }
 
-export async function fetchAndroidManifest() {
-  const res = await httpRequest({ method: "GET", url: MANIFEST_URL, timeoutMs: 20000 });
+export async function fetchAndroidManifest(settings) {
+  const url = withGithubMirror(MANIFEST_URL, githubMirrorOn(settings));
+  const res = await httpRequest({ method: "GET", url, timeoutMs: 20000 });
   if (res.status < 200 || res.status >= 300) {
     throw new Error(`读不到更新说明（${res.status}）。确认已经推到 GitHub。`);
   }
@@ -45,10 +47,11 @@ export async function fetchAndroidManifest() {
   return data;
 }
 
-export async function checkAppUpdate() {
+export async function checkAppUpdate(settings) {
+  const useMirror = githubMirrorOn(settings);
   const [local, remote] = await Promise.all([
     currentAppVersion(),
-    fetchAndroidManifest(),
+    fetchAndroidManifest(settings),
   ]);
   const newer =
     (Number(remote.versionCode) || 0) > (Number(local.versionCode) || 0) ||
@@ -57,7 +60,7 @@ export async function checkAppUpdate() {
     current: local.version,
     latest: remote.version,
     newer,
-    url: remote.url,
+    url: withGithubMirror(remote.url, useMirror),
     notes: remote.notes || "",
   };
 }

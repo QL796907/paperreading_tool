@@ -10,8 +10,8 @@
 
 | 端 | 形态 | 更新 |
 | --- | --- | --- |
-| Windows | Electron + NSIS，关窗进托盘 | GitHub Release + `electron-updater`（`latest.yml`） |
-| Android | Capacitor WebView，无 Zotero 划词；词条在本地，坚果云 WebDAV 同步 | `updates/android.json` 的 `version` + **`versionCode`** |
+| Windows | Electron + NSIS，关窗进托盘 | GitHub Release + `electron-updater`（`latest.yml`）。设置里「使用镜像下载更新」默认开，走 `https://gh.4o.pw/` 前缀；说明 https://gh.4o.pw/docs |
+| Android | Capacitor WebView，无 Zotero 划词；词条在本地，坚果云 WebDAV 同步 | `updates/android.json` 的 `version` + **`versionCode`**。清单和 APK 下载同样可走 gh.4o.pw 镜像 |
 | Zotero | 插件 xpi | `manifest.json` 的 `update_url` → `updates/zotero.json` |
 
 电脑开发时还有 Express（`server/`，端口 3780）+ Vite（`web/`，5173）。手机 APK **不跑 Express**，走 `web/src/native*.js`。
@@ -31,6 +31,7 @@
 - `scripts/` `pack-plugin.js`、`build-apk.js`、`setup-android.js`、`with-proxy.js`、`make-icons.js`（方案 E 绿框学印，电脑/手机同一套）。
 - `updates/android.json`、`updates/zotero.json` 更新清单（进 git）。
 - `release/` 安装包输出（不进 git）。
+- `图标截图/` 给 hy 直接打开看的电脑/手机图标图。
 - `.cursor/rules/` 项目硬规则。
 
 ## 命令

@@ -10,6 +10,7 @@ export const DEFAULT_SETTINGS = {
   webdavUser: "",
   webdavPassword: "",
   webdavPath: "paper-glossary/terms.json",
+  githubMirrorEnabled: true,
 };
 
 export function localDate(d = new Date()) {

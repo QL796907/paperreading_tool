@@ -52,17 +52,30 @@ public class ApkUpdaterPlugin extends Plugin {
               try {
                 File out = new File(getContext().getCacheDir(), "paper-glossary-update.apk");
                 conn = (HttpURLConnection) new URL(url).openConnection();
-                conn.setInstanceFollowRedirects(true);
+                conn.setInstanceFollowRedirects(false);
                 conn.setConnectTimeout(20000);
                 conn.setReadTimeout(60000);
                 conn.connect();
                 int status = conn.getResponseCode();
-                if (status >= 300 && status < 400) {
+                int hops = 0;
+                boolean viaMirror = url.startsWith("https://gh.4o.pw/");
+                while (status >= 300 && status < 400 && hops < 5) {
                   String next = conn.getHeaderField("Location");
                   conn.disconnect();
+                  if (next == null || next.isEmpty()) break;
+                  if (viaMirror
+                      && !next.startsWith("https://gh.4o.pw/")
+                      && (next.startsWith("https://github.com/")
+                          || next.contains("githubusercontent.com"))) {
+                    next = "https://gh.4o.pw/" + next;
+                  }
                   conn = (HttpURLConnection) new URL(next).openConnection();
+                  conn.setInstanceFollowRedirects(false);
+                  conn.setConnectTimeout(20000);
+                  conn.setReadTimeout(60000);
                   conn.connect();
                   status = conn.getResponseCode();
+                  hops += 1;
                 }
                 if (status != 200) {
                   call.reject("下载失败（HTTP " + status + "）");

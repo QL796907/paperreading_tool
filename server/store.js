@@ -28,6 +28,7 @@ const DEFAULT_SETTINGS = {
   webdavUser: "",
   webdavPassword: "",
   webdavPath: "paper-glossary/terms.json",
+  githubMirrorEnabled: true,
 };
 
 function localDate(d = new Date()) {
