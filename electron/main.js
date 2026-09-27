@@ -7,13 +7,12 @@ import {
   dialog,
   Notification,
   shell,
-  session,
 } from "electron";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import updater from "electron-updater";
-import { GITHUB_MIRROR_PREFIX, withGithubMirror } from "../web/src/githubMirror.js";
+import { GITHUB_MIRROR_PREFIX } from "../web/src/githubMirror.js";
 
 const autoUpdater = updater.autoUpdater ?? updater;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -28,6 +27,7 @@ let httpServer = null;
 let quitting = false;
 let trayHintShown = false;
 let manualUpdateCheck = false;
+let updateReady = false;
 
 app.setName("术语本");
 app.setAppUserModelId("com.ql796907.paper-glossary");
@@ -159,6 +159,10 @@ function rebuildTrayMenu() {
         label: "退出",
         click: () => {
           quitting = true;
+          if (updateReady && app.isPackaged) {
+            installDownloadedUpdate();
+            return;
+          }
           app.quit();
         },
       },
@@ -195,29 +199,24 @@ function applyUpdateFeed() {
   });
 }
 
-function setupGithubMirrorIntercept() {
-  session.defaultSession.webRequest.onBeforeRequest(
-    {
-      urls: [
-        "https://github.com/*",
-        "https://*.github.com/*",
-        "https://githubusercontent.com/*",
-        "https://*.githubusercontent.com/*",
-      ],
-    },
-    (details, callback) => {
-      if (!githubMirrorEnabled()) {
-        callback({});
-        return;
-      }
-      const next = withGithubMirror(details.url, true);
-      if (next === details.url) {
-        callback({});
-        return;
-      }
-      callback({ redirectURL: next });
-    },
-  );
+function prepareQuitForUpdate() {
+  quitting = true;
+  try {
+    httpServer?.close();
+  } catch {
+    /* ignore */
+  }
+  try {
+    tray?.destroy();
+  } catch {
+    /* ignore */
+  }
+  tray = null;
+}
+
+function installDownloadedUpdate() {
+  prepareQuitForUpdate();
+  autoUpdater.quitAndInstall(false, true);
 }
 
 function notify(title, body) {
@@ -230,9 +229,9 @@ function notify(title, body) {
 
 function setupAutoUpdater() {
   autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.autoInstallOnAppQuit = false;
   autoUpdater.autoRunAppAfterInstall = true;
-  setupGithubMirrorIntercept();
+  autoUpdater.disableDifferentialDownload = true;
   applyUpdateFeed();
 
   autoUpdater.on("update-available", (info) => {
@@ -253,29 +252,23 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on("update-downloaded", (info) => {
-    notify(
-      "术语本已准备好更新",
-      `新版本 ${info.version} 已下载。现在退出，或下次关掉术语本时会自动安装。`,
-    );
-    if (manualUpdateCheck) {
-      manualUpdateCheck = false;
-      dialog
-        .showMessageBox({
-          type: "info",
-          title: "术语本",
-          message: `新版本 ${info.version} 已下载完成。`,
-          detail: "选择现在重启安装，或等下次退出时自动装上。",
-          buttons: ["现在重启安装", "下次退出时安装"],
-          defaultId: 0,
-          cancelId: 1,
-        })
-        .then((result) => {
-          if (result.response === 0) {
-            quitting = true;
-            autoUpdater.quitAndInstall(false, true);
-          }
-        });
-    }
+    updateReady = true;
+    rebuildTrayMenu();
+    notify("术语本已准备好更新", `新版本 ${info.version} 已下载，需要退出后才会安装。`);
+    dialog
+      .showMessageBox({
+        type: "info",
+        title: "术语本",
+        message: `新版本 ${info.version} 已下载完成。`,
+        detail: "关掉窗口不会安装。请选现在退出并安装，或以后在托盘里点「退出」。",
+        buttons: ["现在退出并安装", "以后再说"],
+        defaultId: 0,
+        cancelId: 1,
+      })
+      .then((result) => {
+        manualUpdateCheck = false;
+        if (result.response === 0) installDownloadedUpdate();
+      });
   });
 
   autoUpdater.on("error", (err) => {
@@ -314,6 +307,10 @@ async function checkForUpdates(manual) {
   }
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function waitForHealth(timeoutMs = 20000) {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
@@ -323,9 +320,26 @@ async function waitForHealth(timeoutMs = 20000) {
     } catch {
       /* 服务还在起来 */
     }
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    await sleep(150);
   }
   throw new Error("本地服务没有启动起来");
+}
+
+async function startLocalServer() {
+  const { startServer } = await import("../server/index.js");
+  let lastErr = null;
+  for (let i = 0; i < 8; i += 1) {
+    try {
+      const started = await startServer();
+      await waitForHealth(4000);
+      return started;
+    } catch (err) {
+      lastErr = err;
+      if (err?.code !== "EADDRINUSE") throw err;
+      await sleep(400);
+    }
+  }
+  throw lastErr;
 }
 
 app.whenReady().then(async () => {
@@ -337,20 +351,16 @@ app.whenReady().then(async () => {
   process.env.GLOSSARY_DIST_DIR = path.join(projectRoot, "web", "dist");
 
   try {
-    const { startServer } = await import("../server/index.js");
-    const started = await startServer();
+    const started = await startLocalServer();
     httpServer = started.server;
-    await waitForHealth();
   } catch (err) {
     const busy = err && err.code === "EADDRINUSE";
     await dialog.showMessageBox({
       type: "error",
       title: "术语本无法启动",
-      message: busy
-        ? `端口 ${PORT} 已被占用。`
-        : err?.message || "启动失败",
+      message: busy ? `端口 ${PORT} 已被占用。` : err?.message || "启动失败",
       detail: busy
-        ? "请先关掉另一份术语本，或关掉正在跑的 npm run start / npm run dev。"
+        ? "右下角托盘里可能还有一份术语本。请右键它点「退出」，再打开。"
         : String(err),
     });
     quitting = true;

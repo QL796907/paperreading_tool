@@ -10,7 +10,7 @@
 
 | 端 | 形态 | 更新 |
 | --- | --- | --- |
-| Windows | Electron + NSIS，关窗进托盘 | GitHub Release + `electron-updater`（`latest.yml`）。设置里「使用镜像下载更新」默认开，走 `https://gh.4o.pw/` 前缀；说明 https://gh.4o.pw/docs |
+| Windows | Electron + NSIS，关窗进托盘 | GitHub Release + `electron-updater`（`latest.yml`）。设置里「使用镜像下载更新」默认开，走 `https://gh.4o.pw/` 前缀；说明 https://gh.4o.pw/docs 。关窗不等于退出，下载完更新要托盘「退出」或对话框里安装，不要静默装（装到 Program Files 时静默会失败、看起来像闪退） |
 | Android | Capacitor WebView，无 Zotero 划词；词条在本地，坚果云 WebDAV 同步 | `updates/android.json` 的 `version` + **`versionCode`**。清单和 APK 下载同样可走 gh.4o.pw 镜像 |
 | Zotero | 插件 xpi | `manifest.json` 的 `update_url` → `updates/zotero.json` |
 
