@@ -329,6 +329,8 @@ async function waitForHealth(timeoutMs = 20000) {
 }
 
 app.whenReady().then(async () => {
+  if (!gotLock) return;
+
   process.env.GLOSSARY_DATA_DIR = app.isPackaged
     ? app.getPath("userData")
     : path.join(projectRoot, "data");
