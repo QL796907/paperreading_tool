@@ -24,7 +24,7 @@
 
 - `web/` React UI。桌面走 `api.js`；Android 走 `nativeApi.js` 等。
 - `server/` 仅电脑：词条、AI、WebDAV。
-- `electron/` 桌面壳、托盘、`electron-updater`。
+- `electron/` 桌面壳、托盘、`electron-updater`。主进程不要 `import` `web/src`：安装包只打进 `electron/`、`server/`、`web/dist/`。
 - `android/` Capacitor 工程；包名 `com.ql796907.paperglossary`。
 - `native/android/` 原生插件源，setup 时拷进 `android/`。
 - `zotero-plugin/` Zotero 7 插件。
