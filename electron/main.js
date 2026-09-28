@@ -82,8 +82,14 @@ function createWindow() {
     minWidth: 840,
     minHeight: 560,
     show: false,
-    backgroundColor: "#2c241c",
+    backgroundColor: "#f4ecd8",
     autoHideMenuBar: true,
+    titleBarStyle: "hidden",
+    titleBarOverlay: {
+      color: "#f4ecd8",
+      symbolColor: "#1f1a14",
+      height: 36,
+    },
     icon: iconPath("icon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
