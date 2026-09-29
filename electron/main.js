@@ -86,7 +86,7 @@ function createWindow() {
     autoHideMenuBar: true,
     titleBarStyle: "hidden",
     titleBarOverlay: {
-      color: "#e0d6bc",
+      color: "#e4dcc6",
       symbolColor: "#1f1a14",
       height: 36,
     },
