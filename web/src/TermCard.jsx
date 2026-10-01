@@ -36,6 +36,15 @@ export default function TermCard({
     setDraft(term.definition || "");
   }, [term.definition]);
 
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    function onDoc(ev) {
+      if (!ev.target.closest?.(".entry-more")) setMenuOpen(false);
+    }
+    document.addEventListener("pointerdown", onDoc);
+    return () => document.removeEventListener("pointerdown", onDoc);
+  }, [menuOpen]);
+
   async function saveDefinition() {
     setBusy("save");
     try {

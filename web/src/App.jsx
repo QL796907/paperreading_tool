@@ -321,8 +321,10 @@ export default function App() {
 
         <main
           className="page"
-          onDoubleClick={(ev) => {
-            if (ev.target.closest("button, input, textarea, a, .entry, .search")) return;
+            onDoubleClick={(ev) => {
+            if (ev.target.closest("button, input, textarea, a, .entry, .search, p, h1, h2, h3, blockquote")) {
+              return;
+            }
             enterReading();
           }}
         >

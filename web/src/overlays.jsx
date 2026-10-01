@@ -1,12 +1,22 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { api } from "./api.js";
 import { APP_VERSION, isAndroidApp, isNativeApp } from "./platform.js";
 import { checkAppUpdate, downloadAndInstall } from "./apkUpdate.js";
 import { GITHUB_MIRROR_DOCS, githubMirrorOn } from "./githubMirror.js";
 
 export function Overlay({ children, onClose, wide }) {
+  const backdropDown = useRef(false);
   return (
-    <div className="overlay" onClick={onClose}>
+    <div
+      className="overlay"
+      onPointerDown={(e) => {
+        backdropDown.current = e.target === e.currentTarget;
+      }}
+      onClick={(e) => {
+        if (backdropDown.current && e.target === e.currentTarget) onClose?.();
+        backdropDown.current = false;
+      }}
+    >
       <div
         className={`sheet ${wide || ""}`}
         onClick={(e) => e.stopPropagation()}

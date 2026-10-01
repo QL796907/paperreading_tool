@@ -33,6 +33,7 @@ export default function ReadingMode({
   const bodyRef = useRef(null);
   const measureRef = useRef(null);
   const pointer = useRef(null);
+  const downOnDesk = useRef(false);
   const wantLast = useRef(false);
   const toastedEdge = useRef({ start: false, end: false });
 
@@ -184,6 +185,10 @@ export default function ReadingMode({
 
   function onPointerDown(ev) {
     if (ev.pointerType === "mouse" && ev.button !== 0) return;
+    if (ev.target.closest("input, textarea, button, a, .definition, blockquote")) {
+      pointer.current = null;
+      return;
+    }
     pointer.current = { x: ev.clientX, y: ev.clientY };
   }
 
@@ -191,6 +196,7 @@ export default function ReadingMode({
     if (!pointer.current) return;
     const dx = ev.clientX - pointer.current.x;
     pointer.current = null;
+    if (window.getSelection?.()?.toString()) return;
     if (Math.abs(dx) < 56) return;
     if (dx < 0) nextPage();
     else prevPage();
@@ -207,8 +213,11 @@ export default function ReadingMode({
   return (
     <div
       className={`desk reading-desk ${edge ? `edge-${edge}` : ""}`}
+      onPointerDown={(e) => {
+        downOnDesk.current = e.target === e.currentTarget;
+      }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onExit();
+        if (downOnDesk.current && e.target === e.currentTarget) onExit();
       }}
     >
       <header className="reader-bar" onClick={(e) => e.stopPropagation()}>

@@ -116,6 +116,14 @@ button { cursor: pointer; }
   padding-top: 0;
 }
 
+.desktop-frame-body input,
+.desktop-frame-body textarea,
+.desktop-frame-body button,
+.desktop-frame-body a,
+.desktop-frame-body label {
+  -webkit-app-region: no-drag;
+}
+
 .book {
   width: 100%;
   height: 100%;
