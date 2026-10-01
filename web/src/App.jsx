@@ -19,6 +19,34 @@ import {
   matchesQuery,
 } from "./dates.js";
 
+function DesktopFrame({ children }) {
+  const desktop = typeof window !== "undefined" && window.glossaryDesktop?.isDesktop;
+  if (!desktop) return children;
+  const win = window.glossaryDesktop;
+  return (
+    <div className="desktop-frame">
+      <header className="desktop-titlebar">
+        <div
+          className="desktop-titlebar-drag"
+          onDoubleClick={() => win.toggleMaximize()}
+        />
+        <div className="desktop-titlebar-controls">
+          <button type="button" aria-label="最小化" onClick={() => win.minimize()}>
+            –
+          </button>
+          <button type="button" aria-label="最大化" onClick={() => win.toggleMaximize()}>
+            □
+          </button>
+          <button type="button" className="close" aria-label="关闭" onClick={() => win.close()}>
+            ×
+          </button>
+        </div>
+      </header>
+      <div className="desktop-frame-body">{children}</div>
+    </div>
+  );
+}
+
 export default function App() {
   const [terms, setTerms] = useState([]);
   const [settings, setSettings] = useState(null);
@@ -188,7 +216,7 @@ export default function App() {
 
   if (reading) {
     return (
-      <>
+      <DesktopFrame>
         <ReadingMode
           terms={terms}
           startDate={activeDate}
@@ -227,11 +255,12 @@ export default function App() {
           />
         ) : null}
         <Toast message={toast} onRetry={toastRetry} />
-      </>
+      </DesktopFrame>
     );
   }
 
   return (
+    <DesktopFrame>
     <div className="desk">
       <div className={`book ${drawer ? "drawer-open" : ""}`}>
         <aside className="index">
@@ -432,6 +461,7 @@ export default function App() {
 
       <Toast message={toast} onRetry={toastRetry} />
     </div>
+    </DesktopFrame>
   );
 }
 

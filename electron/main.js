@@ -7,6 +7,7 @@ import {
   dialog,
   Notification,
   shell,
+  ipcMain,
 } from "electron";
 import path from "path";
 import fs from "fs";
@@ -29,6 +30,14 @@ let quitting = false;
 let trayHintShown = false;
 let manualUpdateCheck = false;
 let updateReady = false;
+
+ipcMain.on("win-minimize", () => mainWindow?.minimize());
+ipcMain.on("win-maximize", () => {
+  if (!mainWindow) return;
+  if (mainWindow.isMaximized()) mainWindow.unmaximize();
+  else mainWindow.maximize();
+});
+ipcMain.on("win-close", () => mainWindow?.close());
 
 app.setName("术语本");
 app.setAppUserModelId("com.ql796907.paper-glossary");
@@ -70,8 +79,6 @@ function showWindow() {
   mainWindow.focus();
 }
 
-const TITLE_BAR = "#c6b69a";
-
 function createWindow() {
   if (mainWindow && !mainWindow.isDestroyed()) {
     showWindow();
@@ -84,14 +91,9 @@ function createWindow() {
     minWidth: 840,
     minHeight: 560,
     show: false,
-    backgroundColor: TITLE_BAR,
+    backgroundColor: "#dfd3bc",
     autoHideMenuBar: true,
     titleBarStyle: "hidden",
-    titleBarOverlay: {
-      color: TITLE_BAR,
-      symbolColor: "#1f1a14",
-      height: 36,
-    },
     icon: iconPath("icon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
@@ -107,17 +109,6 @@ function createWindow() {
     ? "http://127.0.0.1:5173/"
     : `http://127.0.0.1:${PORT}/`;
   mainWindow.loadURL(url);
-  mainWindow.webContents.on("did-finish-load", () => {
-    if (!mainWindow || mainWindow.isDestroyed()) return;
-    mainWindow.webContents.insertCSS(
-      `.desk{background:${TITLE_BAR} !important;padding-top:36px !important;}`,
-    );
-    mainWindow.setTitleBarOverlay({
-      color: TITLE_BAR,
-      symbolColor: "#1f1a14",
-      height: 36,
-    });
-  });
 
   mainWindow.once("ready-to-show", () => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.show();
