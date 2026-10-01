@@ -70,6 +70,8 @@ function showWindow() {
   mainWindow.focus();
 }
 
+const TITLE_BAR = "#c6b69a";
+
 function createWindow() {
   if (mainWindow && !mainWindow.isDestroyed()) {
     showWindow();
@@ -82,11 +84,11 @@ function createWindow() {
     minWidth: 840,
     minHeight: 560,
     show: false,
-    backgroundColor: "#cfc4ae",
+    backgroundColor: TITLE_BAR,
     autoHideMenuBar: true,
     titleBarStyle: "hidden",
     titleBarOverlay: {
-      color: "#cfc4ae",
+      color: TITLE_BAR,
       symbolColor: "#1f1a14",
       height: 36,
     },
@@ -105,6 +107,17 @@ function createWindow() {
     ? "http://127.0.0.1:5173/"
     : `http://127.0.0.1:${PORT}/`;
   mainWindow.loadURL(url);
+  mainWindow.webContents.on("did-finish-load", () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    mainWindow.webContents.insertCSS(
+      `.desk{background:${TITLE_BAR} !important;padding-top:36px !important;}`,
+    );
+    mainWindow.setTitleBarOverlay({
+      color: TITLE_BAR,
+      symbolColor: "#1f1a14",
+      height: 36,
+    });
+  });
 
   mainWindow.once("ready-to-show", () => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.show();
