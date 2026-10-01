@@ -526,9 +526,34 @@ function writePreviews() {
   writePng(path.join(out, "preview-android-round.png"), phoneRound);
 }
 
+function writeReviewShots() {
+  const dir = path.join(root, "图标截图");
+  fs.mkdirSync(dir, { recursive: true });
+  writePng(path.join(dir, "2-现在的图标.png"), makeIcon(720));
+
+  const desk = composeCentered(canvas(900, DESK), makeIcon(240), 240);
+  writePng(path.join(dir, "3-电脑桌面.png"), desk);
+
+  const night = [24, 24, 28, 255];
+  writePng(
+    path.join(dir, "4-手机方标.png"),
+    composeCentered(canvas(900, night), makeIcon(240), 240),
+  );
+  writePng(
+    path.join(dir, "5-手机圆标.png"),
+    composeCentered(canvas(900, night), circleMask(makeIcon(240)), 240),
+  );
+
+  const sample = path.join(root, "web", "public", "icons", "icon-grokbot-source.png");
+  if (fs.existsSync(sample)) {
+    fs.copyFileSync(sample, path.join(dir, "1-当初示例.png"));
+  }
+}
+
 writeMasterSvg();
 writeWebAndWindows();
 writePreviews();
+writeReviewShots();
 if (fs.existsSync(path.join(root, "android", "app", "src", "main", "res"))) {
   writeAndroid();
 }
