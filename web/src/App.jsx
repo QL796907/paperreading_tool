@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "./api.js";
 import { isAndroidApp, isNativeApp } from "./platform.js";
 import { checkAppUpdate } from "./apkUpdate.js";
+import { getSyncStatus, setNativeSyncListener } from "./nativeSync.js";
 import TermCard from "./TermCard.jsx";
 import ReadingMode from "./ReadingMode.jsx";
 import {
@@ -37,24 +38,44 @@ export default function App() {
 
   const searching = Boolean(query.trim());
 
+  const settingsRef = useRef(null);
+  settingsRef.current = settings;
+
   const load = useCallback(async () => {
     const data = await api.state();
+    settingsRef.current = data.settings || null;
     setTerms(data.terms);
     setSettings(data.settings);
     setSync(data.sync || null);
     setLoading(false);
     setToastRetry(null);
+    return data;
   }, []);
 
   useEffect(() => {
-    load().catch((err) => {
-      setLoading(false);
-      setToast(err.message);
-      setToastRetry(() => () => {
-        setToast("");
-        load().catch((e) => setToast(e.message));
+    let cancelled = false;
+    load()
+      .then((data) => {
+        if (cancelled || !isAndroidApp() || !data?.settings) return;
+        checkAppUpdate(data.settings)
+          .then((info) => {
+            if (cancelled || !info.newer) return;
+            setToast(`有新版本 ${info.latest}，可在设置里下载安装`);
+          })
+          .catch(() => {});
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setLoading(false);
+        setToast(err.message);
+        setToastRetry(() => () => {
+          setToast("");
+          load().catch((e) => setToast(e.message));
+        });
       });
-    });
+    return () => {
+      cancelled = true;
+    };
   }, [load]);
 
   useEffect(() => {
@@ -68,16 +89,12 @@ export default function App() {
 
   useEffect(() => {
     if (!isAndroidApp()) return undefined;
-    let cancelled = false;
-    checkAppUpdate()
-      .then((info) => {
-        if (cancelled || !info.newer) return;
-        setToast(`有新版本 ${info.latest}，可在设置里下载安装`);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
+    setNativeSyncListener(() => {
+      const current = settingsRef.current;
+      if (!current) return;
+      setSync(getSyncStatus(current));
+    });
+    return () => setNativeSyncListener(() => {});
   }, []);
 
   useEffect(() => {
