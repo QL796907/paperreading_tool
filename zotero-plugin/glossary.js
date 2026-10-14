@@ -101,52 +101,110 @@ PaperGlossary = {
       .trim();
   },
 
+  ensurePopupStyle(doc) {
+    if (doc.getElementById("paper-glossary-popup-style")) return;
+    const style = doc.createElement("style");
+    style.id = "paper-glossary-popup-style";
+    style.textContent = `
+      .selection-popup button.paper-glossary-add {
+        appearance: none;
+        -moz-appearance: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        width: 100%;
+        height: auto;
+        min-height: 30px;
+        margin: 0;
+        padding: 6px 10px;
+        border: 1px solid #243f32;
+        border-radius: 6px;
+        background: #2f4f3e;
+        color: #f4ecd8;
+        font: 600 13px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        text-align: center;
+        cursor: pointer;
+        user-select: none;
+        box-shadow: 0 1px 2px rgba(31, 26, 20, 0.22);
+      }
+      .selection-popup button.paper-glossary-add:hover:not(:disabled) {
+        background: #3a6350;
+        border-color: #243f32;
+      }
+      .selection-popup button.paper-glossary-add:active:not(:disabled) {
+        background: #243f32;
+      }
+      .selection-popup button.paper-glossary-add:focus-visible {
+        outline: 2px solid #2f4f3e;
+        outline-offset: 2px;
+      }
+      .selection-popup button.paper-glossary-add:disabled {
+        cursor: default;
+      }
+      .selection-popup button.paper-glossary-add.is-busy {
+        opacity: 0.72;
+      }
+      .selection-popup button.paper-glossary-add.is-done {
+        background: #e4ede7;
+        border-color: #2f4f3e;
+        color: #2f4f3e;
+        box-shadow: none;
+        opacity: 1;
+      }
+      .selection-popup button.paper-glossary-add.is-error {
+        background: #8b3a2f;
+        border-color: #6e2e26;
+        color: #f4ecd8;
+        opacity: 1;
+      }
+    `;
+    (doc.head || doc.documentElement).appendChild(style);
+  },
+
+  setPopupButtonState(btn, state) {
+    btn.classList.remove("is-busy", "is-done", "is-error");
+    if (state) btn.classList.add(state);
+  },
+
   onTextSelectionPopup: (event) => {
     const self = PaperGlossary;
     const { reader, doc, append } = event;
     const text = self.selectedText(event);
     if (!text) return;
     self.lastSelection = { text, reader };
-
-    const wrap = doc.createElement("div");
-    wrap.style.cssText =
-      "display:flex;width:100%;margin-top:6px;padding-top:6px;border-top:1px solid rgba(31,26,20,0.18);";
+    self.ensurePopupStyle(doc);
 
     const btn = doc.createElement("button");
-    btn.className = "toolbar-button wide-button";
+    btn.type = "button";
+    btn.className = "paper-glossary-add";
     btn.textContent = "加入术语本";
     btn.title = "把选中的术语写入本地术语笔记本";
-    btn.style.cssText =
-      "background:transparent;box-shadow:none;font-weight:normal;color:#1F1A14;min-height:28px;";
     btn.addEventListener("click", async (ev) => {
       ev.preventDefault();
       ev.stopPropagation();
       const idle = "加入术语本";
       btn.disabled = true;
-      btn.style.opacity = "0.55";
-      btn.style.color = "#6B5E4E";
+      self.setPopupButtonState(btn, "is-busy");
       btn.textContent = "加入中…";
       try {
         await self.addTerm(text, reader);
-        btn.style.opacity = "1";
-        btn.style.color = "#2F4F3E";
+        self.setPopupButtonState(btn, "is-done");
         btn.textContent = "已加入";
         setTimeout(() => {
           btn.textContent = idle;
-          btn.style.color = "#1F1A14";
+          self.setPopupButtonState(btn, "");
           btn.disabled = false;
         }, 1200);
       } catch (err) {
         btn.disabled = false;
-        btn.style.opacity = "1";
-        btn.style.color = "#8B3A2F";
+        self.setPopupButtonState(btn, "is-error");
         btn.textContent = "加入失败";
         self.notify("未能加入术语本", err.message || String(err), true);
       }
     });
 
-    wrap.appendChild(btn);
-    append(wrap);
+    append(btn);
   },
 
   onViewContextMenu: (event) => {
