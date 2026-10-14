@@ -111,7 +111,7 @@ function ensureKeystore() {
       "-keypass",
       "paperglossary",
       "-dname",
-      `"CN=术语本, OU=personal, O=hy, L=Local, ST=NA, C=CN"`,
+      `"CN=术语本, OU=personal, O=ql, L=Local, ST=NA, C=CN"`,
     ]);
     console.warn("已新建钥匙。请立刻备份 android/glossary.keystore 和 android/keystore.properties。");
   }

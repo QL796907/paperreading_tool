@@ -5,7 +5,7 @@ alwaysApply: true
 
 # 发版时的 README
 
-只有 hy 说 **发版** 时才动用户 README。日常改功能不要为了交差去改 `README.md`。
+只有 ql 说 **发版** 时才动用户 README。日常改功能不要为了交差去改 `README.md`。
 
 ## 第一次发版
 
