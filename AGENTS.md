@@ -31,7 +31,7 @@
 - `scripts/` `pack-plugin.js`、`build-apk.js`、`setup-android.js`、`with-proxy.js`、`make-icons.js`（方案 E 绿框学印，电脑/手机同一套）。
 - `updates/android.json`、`updates/zotero.json` 更新清单（进 git）。
 - `release/` 安装包输出（不进 git）。
-- `图标截图/` 给 ql 直接打开看的电脑/手机图标图。
+- `web/public/icons/preview-windows.png`、`preview-android.png`、`preview-android-round.png`：电脑/手机图标预览。
 - `.cursor/rules/` 项目硬规则。
 
 ## 命令
