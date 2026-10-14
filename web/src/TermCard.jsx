@@ -13,7 +13,7 @@ function sealClass(term, busy) {
   if (busy === "ai") return "busy";
   if (term.definitionSource === "ai") return "ai";
   if (term.definitionSource === "manual") return "manual";
-  return "empty";
+  return "pending";
 }
 
 export default function TermCard({

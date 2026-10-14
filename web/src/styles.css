@@ -366,7 +366,7 @@ button { cursor: pointer; }
   flex: none;
 }
 
-.seal.empty { color: var(--seal-pending); }
+.seal.pending { color: var(--seal-pending); }
 .seal.manual { color: var(--seal-hand); }
 .seal.ai { color: var(--seal-ai); }
 .seal.busy { color: var(--ink-muted); }
