@@ -1,9 +1,34 @@
-import { Capacitor, CapacitorHttp } from "@capacitor/core";
+import { Capacitor, CapacitorHttp, registerPlugin } from "@capacitor/core";
+
+const WebDav = registerPlugin("WebDav");
+
+// Android HttpURLConnection（CapacitorHttp 用的那层）不认这些方法。
+const SYSTEM_METHODS = new Set([
+  "GET",
+  "POST",
+  "HEAD",
+  "OPTIONS",
+  "PUT",
+  "DELETE",
+  "PATCH",
+  "TRACE",
+]);
 
 function fail(message, status = 400) {
   const error = new Error(message);
   error.status = status;
   return error;
+}
+
+function readableNetworkError(err) {
+  const msg = String(err?.message || "");
+  if (/invalid http method|unknown method|PROPFIND|MKCOL/i.test(msg)) {
+    return "手机系统发不出这个 WebDAV 请求，请更新术语本后再试";
+  }
+  if (/not implemented/i.test(msg)) {
+    return "这版应用还不能连坚果云，请更新后再试";
+  }
+  return msg || "网络请求失败";
 }
 
 export async function httpRequest({
@@ -13,10 +38,34 @@ export async function httpRequest({
   body,
   timeoutMs = 25000,
 }) {
+  const verb = String(method || "GET").toUpperCase();
+  if (
+    Capacitor.isNativePlatform() &&
+    Capacitor.getPlatform() === "android" &&
+    !SYSTEM_METHODS.has(verb)
+  ) {
+    try {
+      const res = await WebDav.request({
+        method: verb,
+        url,
+        headers,
+        body: body ?? "",
+        timeoutMs,
+      });
+      return {
+        status: res.status,
+        text: typeof res.text === "string" ? res.text : "",
+        headers: res.headers || {},
+      };
+    } catch (err) {
+      throw fail(readableNetworkError(err), 502);
+    }
+  }
+
   if (Capacitor.isNativePlatform()) {
     try {
       const res = await CapacitorHttp.request({
-        method,
+        method: verb,
         url,
         headers,
         data: body ?? undefined,

@@ -565,6 +565,10 @@ blockquote {
   gap: 8px;
 }
 
+.sync-actions button {
+  min-height: 40px;
+}
+
 .sync-note {
   margin: 0;
   font-size: 12px;

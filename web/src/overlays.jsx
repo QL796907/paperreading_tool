@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "./api.js";
 import { APP_VERSION, isAndroidApp, isNativeApp } from "./platform.js";
 import { checkAppUpdate, downloadAndInstall } from "./apkUpdate.js";
@@ -127,7 +127,9 @@ export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
   const [syncBusy, setSyncBusy] = useState(false);
   const [updateBusy, setUpdateBusy] = useState(false);
   const [error, setError] = useState("");
+  const [davError, setDavError] = useState("");
   const [note, setNote] = useState(sync?.lastMessage || "");
+  const davFeedbackRef = useRef(null);
   const [updateNote, setUpdateNote] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [showDav, setShowDav] = useState(false);
@@ -137,6 +139,11 @@ export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
   function setField(key, value) {
     setDraft((prev) => ({ ...prev, [key]: value }));
   }
+
+  useEffect(() => {
+    if (!davError && !note) return;
+    davFeedbackRef.current?.scrollIntoView({ block: "nearest" });
+  }, [davError, note]);
 
   async function submit(ev) {
     ev.preventDefault();
@@ -154,6 +161,7 @@ export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
   async function test() {
     setTestBusy(true);
     setError("");
+    setDavError("");
     setNote("");
     try {
       const data = await api.testSync({
@@ -164,7 +172,7 @@ export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
       });
       setNote(data.message || "连接成功");
     } catch (err) {
-      setError(err.message);
+      setDavError(err.message || "测试失败");
     } finally {
       setTestBusy(false);
     }
@@ -173,13 +181,14 @@ export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
   async function runSync() {
     setSyncBusy(true);
     setError("");
+    setDavError("");
     setNote("");
     try {
       await api.saveSettings(draft);
       const data = await api.syncNow();
       setNote(data.message || "同步完成");
     } catch (err) {
-      setError(err.message);
+      setDavError(err.message || "同步失败");
     } finally {
       setSyncBusy(false);
     }
@@ -335,7 +344,11 @@ export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
               {syncBusy ? "同步中…" : "立即同步"}
             </button>
           </div>
-          {note ? <p className="sync-note">{note}</p> : null}
+          {davError || note ? (
+            <p ref={davFeedbackRef} className={davError ? "field-error" : "sync-note"}>
+              {davError || note}
+            </p>
+          ) : null}
         </section>
 
         <section className="settings-block">
