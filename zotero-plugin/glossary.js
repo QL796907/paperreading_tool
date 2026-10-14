@@ -274,9 +274,10 @@ PaperGlossary = {
     const url = this.apiUrl() + "/api/terms";
     const body = {
       word,
-      context: word,
       source: this.paperMeta(reader),
     };
+    // The selection is the headword. Do not store it again as context
+    // until a surrounding sentence exists.
     let xhr;
     try {
       xhr = await Zotero.HTTP.request("POST", url, {
