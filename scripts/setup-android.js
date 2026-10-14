@@ -26,6 +26,10 @@ function patchMainActivity() {
     path.join(root, "native", "android", "ApkUpdaterPlugin.java"),
     path.join(javaDir, "ApkUpdaterPlugin.java"),
   );
+  fs.copyFileSync(
+    path.join(root, "native", "android", "WebDavPlugin.java"),
+    path.join(javaDir, "WebDavPlugin.java"),
+  );
   const main = path.join(javaDir, "MainActivity.java");
   fs.writeFileSync(
     main,
@@ -37,6 +41,7 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(android.os.Bundle savedInstanceState) {
     registerPlugin(ApkUpdaterPlugin.class);
+    registerPlugin(WebDavPlugin.class);
     super.onCreate(savedInstanceState);
   }
 }
@@ -154,6 +159,13 @@ ${text}`;
             }
         }
     }`,
+    );
+  }
+  if (!text.includes("okhttp3:okhttp")) {
+    text = text.replace(
+      "implementation project(':capacitor-android')",
+      `implementation project(':capacitor-android')
+    implementation "com.squareup.okhttp3:okhttp:4.12.0"`,
     );
   }
   if (!text.includes("signingConfigs.release")) {

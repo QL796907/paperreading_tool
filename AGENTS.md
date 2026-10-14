@@ -26,7 +26,7 @@
 - `server/` 仅电脑：词条、AI、WebDAV。
 - `electron/` 桌面壳、托盘、`electron-updater`。
 - `android/` Capacitor 工程；包名 `com.ql796907.paperglossary`。
-- `native/android/` 原生插件源，setup 时拷进 `android/`。
+- `native/android/` 原生插件源，setup 时拷进 `android/`。`WebDavPlugin` 用 OkHttp 发 PROPFIND / MKCOL：手机系统网络库不认这两个方法，坚果云「测试连接」和建目录必须走它。
 - `zotero-plugin/` Zotero 7 插件。
 - `scripts/` `pack-plugin.js`、`build-apk.js`、`setup-android.js`、`with-proxy.js`、`make-icons.js`（方案 E 绿框学印，电脑/手机同一套）。
 - `updates/android.json`、`updates/zotero.json` 更新清单（进 git）。
