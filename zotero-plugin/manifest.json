@@ -3,7 +3,7 @@
   "name": "术语本 for Zotero",
   "version": "1.0.3",
   "description": "在 PDF 中选中术语，一键加入本地术语笔记本",
-  "author": "hy",
+  "author": "ql",
   "applications": {
     "zotero": {
       "id": "paper-glossary@local",

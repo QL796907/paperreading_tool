@@ -3,7 +3,7 @@
   "version": "1.0.3",
   "private": true,
   "description": "论文术语笔记本，可从 Zotero 选中文字一键加入",
-  "author": "hy",
+  "author": "ql",
   "type": "module",
   "main": "electron/main.js",
   "repository": {
@@ -53,7 +53,7 @@
   "build": {
     "appId": "com.ql796907.paper-glossary",
     "productName": "术语本",
-    "copyright": "Copyright © hy",
+    "copyright": "Copyright © ql",
     "asar": true,
     "directories": {
       "output": "release",

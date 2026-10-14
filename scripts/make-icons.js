@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 
 /**
  * 方案 E「绿框学印」唯一出图脚本。
- * 图形对齐 hy 当初敲定的 Grokbot 示例：奶油圆角方印、森林绿双线框、
+ * 图形对齐 ql 当初敲定的 Grokbot 示例：奶油圆角方印、森林绿双线框、
  * 中间一本立着的墨色书（封面微掀）、朱红角点在右上。
  * Android / Windows / favicon 都从这里出。
  */

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-给后续 agent 的项目说明。用户是 ql。改完一轮目标后只更新本文件里真正变了的部分。
+给后续 agent 的项目说明。用户是 ql。对外作者署名也是 ql（Zotero `manifest.json` 的 `author`，以及 `package.json` 的 `author` / `copyright`）。改完一轮目标后只更新本文件里真正变了的部分。
 
 ## 这是什么
 
