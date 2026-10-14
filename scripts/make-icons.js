@@ -119,47 +119,6 @@ function punchRounded(c, x, y, w, h, r, color) {
   fillRounded(c, x, y, w, h, r, color);
 }
 
-function inPolygon(px, py, pts) {
-  let n = 0;
-  for (let i = 0, j = pts.length - 1; i < pts.length; j = i, i += 1) {
-    const yi = pts[i][1];
-    const yj = pts[j][1];
-    const xi = pts[i][0];
-    const xj = pts[j][0];
-    if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) n += 1;
-  }
-  return n % 2 === 1;
-}
-
-function fillPolygon(c, pts, color) {
-  let minX = c.size;
-  let minY = c.size;
-  let maxX = 0;
-  let maxY = 0;
-  for (const [x, y] of pts) {
-    minX = Math.min(minX, x);
-    minY = Math.min(minY, y);
-    maxX = Math.max(maxX, x);
-    maxY = Math.max(maxY, y);
-  }
-  const x0 = Math.max(0, Math.floor(minX));
-  const y0 = Math.max(0, Math.floor(minY));
-  const x1 = Math.min(c.size, Math.ceil(maxX));
-  const y1 = Math.min(c.size, Math.ceil(maxY));
-  const samples = [0.25, 0.75];
-  for (let py = y0; py < y1; py += 1) {
-    for (let px = x0; px < x1; px += 1) {
-      let n = 0;
-      for (const ox of samples) {
-        for (const oy of samples) {
-          if (inPolygon(px + ox, py + oy, pts)) n += 1;
-        }
-      }
-      mix(c.data, py * c.size + px, color, n / 4);
-    }
-  }
-}
-
 function distToSeg(px, py, x1, y1, x2, y2) {
   const dx = x2 - x1;
   const dy = y2 - y1;

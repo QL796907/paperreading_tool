@@ -131,11 +131,6 @@ app.put("/api/settings", asyncHandler(async (req, res) => {
   res.json({ settings, sync: getSyncStatus(settings) });
 }));
 
-app.get("/api/sync", asyncHandler(async (_req, res) => {
-  const settings = await store.getSettings();
-  res.json({ sync: getSyncStatus(settings) });
-}));
-
 app.post("/api/sync/test", asyncHandler(async (req, res) => {
   const body = req.body || {};
   const settings = await store.getSettings();
