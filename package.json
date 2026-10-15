@@ -34,7 +34,6 @@
   "dependencies": {
     "@capacitor/core": "^6.2.1",
     "@capacitor/filesystem": "^6.0.3",
-    "cors": "^2.8.5",
     "electron-updater": "^6.3.9",
     "express": "^4.21.2"
   },
