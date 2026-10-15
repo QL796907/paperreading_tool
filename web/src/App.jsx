@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "./api.js";
 import { isAndroidApp, isNativeApp } from "./platform.js";
 import { checkAppUpdate } from "./apkUpdate.js";
-import { getSyncStatus, setNativeSyncListener } from "./nativeSync.js";
+import { setNativeSyncListener } from "./nativeSync.js";
 import TermCard from "./TermCard.jsx";
 import ReadingMode from "./ReadingMode.jsx";
 import {
@@ -38,12 +38,8 @@ export default function App() {
 
   const searching = Boolean(query.trim());
 
-  const settingsRef = useRef(null);
-  settingsRef.current = settings;
-
   const load = useCallback(async () => {
     const data = await api.state();
-    settingsRef.current = data.settings || null;
     setTerms(data.terms);
     setSettings(data.settings);
     setSync(data.sync || null);
@@ -90,12 +86,10 @@ export default function App() {
   useEffect(() => {
     if (!isAndroidApp()) return undefined;
     setNativeSyncListener(() => {
-      const current = settingsRef.current;
-      if (!current) return;
-      setSync(getSyncStatus(current));
+      load().catch(() => {});
     });
     return () => setNativeSyncListener(() => {});
-  }, []);
+  }, [load]);
 
   useEffect(() => {
     if (!toast) return undefined;

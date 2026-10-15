@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import TermCard from "./TermCard.jsx";
 import { EmptyState } from "./overlays.jsx";
 import { formatBigDate } from "./dates.js";
+import { isAndroidApp } from "./platform.js";
 
 function reducedMotion() {
   return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -276,7 +277,7 @@ export default function ReadingMode({
               />
             ))
           ) : (
-            <EmptyState />
+            <EmptyState native={isAndroidApp()} />
           )}
         </div>
       </article>
