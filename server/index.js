@@ -1,5 +1,4 @@
 import express from "express";
-import cors from "cors";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -18,7 +17,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3780;
 
 const app = express();
-app.use(cors({ origin: true }));
 app.use(express.json({ limit: "1mb" }));
 
 const sseClients = new Set();
@@ -129,11 +127,6 @@ app.put("/api/settings", asyncHandler(async (req, res) => {
   broadcast({ type: "settings" });
   if (settings.webdavEnabled) queuePush("local-change");
   res.json({ settings, sync: getSyncStatus(settings) });
-}));
-
-app.get("/api/sync", asyncHandler(async (_req, res) => {
-  const settings = await store.getSettings();
-  res.json({ sync: getSyncStatus(settings) });
 }));
 
 app.post("/api/sync/test", asyncHandler(async (req, res) => {

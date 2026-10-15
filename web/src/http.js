@@ -110,8 +110,5 @@ export async function httpRequest({
 
 export function basicAuth(user, password) {
   const raw = `${user}:${password}`;
-  if (typeof btoa === "function") {
-    return `Basic ${btoa(unescape(encodeURIComponent(raw)))}`;
-  }
-  return `Basic ${Buffer.from(raw, "utf8").toString("base64")}`;
+  return `Basic ${btoa(unescape(encodeURIComponent(raw)))}`;
 }
