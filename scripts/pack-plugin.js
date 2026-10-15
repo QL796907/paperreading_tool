@@ -63,26 +63,5 @@ await fs.writeFile(
   "utf8",
 );
 
-const android = {
-  version: pkg.version,
-  versionCode: 1,
-  url: `https://github.com/QL796907/paperreading_tool/releases/download/v${pkg.version}/paper-glossary-${pkg.version}.apk`,
-  notes: "",
-};
-try {
-  const prev = JSON.parse(
-    await fs.readFile(path.join(root, "updates", "android.json"), "utf8"),
-  );
-  if (Number.isFinite(Number(prev.versionCode))) android.versionCode = Number(prev.versionCode);
-  if (prev.notes) android.notes = prev.notes;
-} catch {
-  /* first write */
-}
-await fs.writeFile(
-  path.join(root, "updates", "android.json"),
-  `${JSON.stringify(android, null, 2)}\n`,
-  "utf8",
-);
-
 console.log("已打包插件：", outFile);
 console.log("Zotero 更新清单已写入 updates/zotero.json");

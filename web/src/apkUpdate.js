@@ -8,25 +8,6 @@ const MANIFEST_URL =
 
 const ApkUpdater = registerPlugin("ApkUpdater");
 
-function parseVersion(s) {
-  return String(s || "0")
-    .split(".")
-    .map((n) => Number.parseInt(n, 10) || 0);
-}
-
-function isNewer(remote, local) {
-  const a = parseVersion(remote);
-  const b = parseVersion(local);
-  const len = Math.max(a.length, b.length);
-  for (let i = 0; i < len; i += 1) {
-    const x = a[i] || 0;
-    const y = b[i] || 0;
-    if (x > y) return true;
-    if (x < y) return false;
-  }
-  return false;
-}
-
 export async function currentAppVersion() {
   if (!isAndroidApp()) return { version: APP_VERSION, versionCode: 0 };
   try {
@@ -53,9 +34,7 @@ export async function checkAppUpdate(settings) {
     currentAppVersion(),
     fetchAndroidManifest(settings),
   ]);
-  const newer =
-    (Number(remote.versionCode) || 0) > (Number(local.versionCode) || 0) ||
-    isNewer(remote.version, local.version);
+  const newer = (Number(remote.versionCode) || 0) > (Number(local.versionCode) || 0);
   return {
     current: local.version,
     latest: remote.version,

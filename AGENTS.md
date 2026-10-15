@@ -41,7 +41,7 @@
 - `npm run dev` 网页 + API
 - `npm run dist` / `dist:proxy` Windows 安装包
 - `npm run apk` / `apk:proxy` Android APK
-- `npm run plugin:pack` xpi，并重写 `updates/zotero.json`（会保留已有 `versionCode`）
+- `npm run plugin:pack` xpi，并重写 `updates/zotero.json`（不改 `updates/android.json`）
 - `npm run android:setup` 同步 web 进 Capacitor（缺 keystore 会停。确认要新建时才设 `GLOSSARY_NEW_KEYSTORE=1`，密码只读 `GLOSSARY_KEYSTORE_PASSWORD`，脚本里没有默认密码）
 
 ## 硬规则（ql）
