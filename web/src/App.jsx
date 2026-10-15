@@ -214,18 +214,6 @@ export default function App() {
             }}
           />
         ) : null}
-        {showAdd ? (
-          <AddModal
-            settings={settings}
-            onClose={() => setShowAdd(false)}
-            onCreated={async (data) => {
-              setShowAdd(false);
-              setActiveDate(data.term.noteDate);
-              setToast(data.created ? "已加入术语本" : "重复词，已合并来源");
-              await load();
-            }}
-          />
-        ) : null}
         <Toast message={toast} onRetry={toastRetry} />
       </>
     );

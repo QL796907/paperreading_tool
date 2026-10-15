@@ -30,7 +30,6 @@ export default function ReadingMode({
     return () => window.removeEventListener("resize", onResize);
   }, []);
   const paperRef = useRef(null);
-  const bodyRef = useRef(null);
   const measureRef = useRef(null);
   const pointer = useRef(null);
   const wantLast = useRef(false);
@@ -264,7 +263,7 @@ export default function ReadingMode({
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
       >
-        <div className="reader-body" ref={bodyRef}>
+        <div className="reader-body">
           {pageTerms.length ? (
             pageTerms.map((term) => (
               <TermCard

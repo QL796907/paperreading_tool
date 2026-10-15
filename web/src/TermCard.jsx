@@ -70,7 +70,7 @@ export default function TermCard({
 
   return (
     <article
-      className={`entry ${flashed ? "flash" : ""} ${reading ? "reading" : ""}`}
+      className={`entry ${flashed ? "flash" : ""}`}
       data-term={term.id}
     >
       <div className="entry-top">
