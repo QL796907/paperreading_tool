@@ -62,6 +62,7 @@
       "electron/**/*",
       "server/**/*",
       "web/dist/**/*",
+      "web/src/glossaryLogic.js",
       "package.json"
     ],
     "extraResources": [
