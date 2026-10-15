@@ -86,48 +86,70 @@ function copyXml() {
   );
 }
 
+function keystorePassword() {
+  const password = process.env.GLOSSARY_KEYSTORE_PASSWORD;
+  if (!password) {
+    console.error(`
+【钥匙密码】缺少环境变量 GLOSSARY_KEYSTORE_PASSWORD。
+新建钥匙，或补写 android/keystore.properties 时，密码必须来自这个环境变量。
+脚本里没有默认密码。密码只留在本机的 keystore.properties，不要提交进 git。
+`);
+    process.exit(1);
+  }
+  return password;
+}
+
 function ensureKeystore() {
   const propsPath = path.join(androidDir, "keystore.properties");
   const storePath = path.join(androidDir, "glossary.keystore");
+  let password = "";
   if (!fs.existsSync(storePath)) {
     console.error(`
 【换电脑提醒】没有找到 android/glossary.keystore。
 这是给手机安装包盖章的钥匙，不在 git 里。
 请从旧电脑拷过来（连同 android/keystore.properties），再重新打包。
 不要在新电脑上另做一把钥匙，否则已经装过的手机无法更新。
-若你确认这是第一次打包、可以新建钥匙，再设环境变量 GLOSSARY_NEW_KEYSTORE=1 后重试。
+若你确认这是第一次打包、可以新建钥匙，再设环境变量 GLOSSARY_NEW_KEYSTORE=1 和 GLOSSARY_KEYSTORE_PASSWORD 后重试。
 `);
     if (process.env.GLOSSARY_NEW_KEYSTORE !== "1") process.exit(1);
-    run("keytool", [
-      "-genkeypair",
-      "-v",
-      "-keystore",
-      `"${storePath}"`,
-      "-alias",
-      "glossary",
-      "-keyalg",
-      "RSA",
-      "-keysize",
-      "2048",
-      "-validity",
-      "10000",
-      "-storepass",
-      "paperglossary",
-      "-keypass",
-      "paperglossary",
-      "-dname",
-      `"CN=术语本, OU=personal, O=ql, L=Local, ST=NA, C=CN"`,
-    ]);
+    password = keystorePassword();
+    // 不走 shell，避免密码被 shell 解释。
+    const result = spawnSync(
+      "keytool",
+      [
+        "-genkeypair",
+        "-v",
+        "-keystore",
+        storePath,
+        "-alias",
+        "glossary",
+        "-keyalg",
+        "RSA",
+        "-keysize",
+        "2048",
+        "-validity",
+        "10000",
+        "-storepass",
+        password,
+        "-keypass",
+        password,
+        "-dname",
+        "CN=术语本, OU=personal, O=ql, L=Local, ST=NA, C=CN",
+      ],
+      { cwd: root, stdio: "inherit" },
+    );
+    if (result.status !== 0) process.exit(result.status ?? 1);
     console.warn("已新建钥匙。请立刻备份 android/glossary.keystore 和 android/keystore.properties。");
   }
   if (!fs.existsSync(propsPath)) {
+    if (!password) password = keystorePassword();
     fs.writeFileSync(
       propsPath,
-      `storeFile=glossary.keystore
-storePassword=paperglossary
-keyAlias=glossary
-keyPassword=paperglossary
-`,
+      "storeFile=glossary.keystore\nstorePassword=" +
+        password +
+        "\nkeyAlias=glossary\nkeyPassword=" +
+        password +
+        "\n",
       "utf8",
     );
   }
