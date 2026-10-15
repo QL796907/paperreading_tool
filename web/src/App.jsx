@@ -399,7 +399,7 @@ export default function App() {
             setActiveDate(data.term.noteDate);
             setQuery("");
             setFlashId(data.term.id);
-            setToast(data.created ? "已加入术语本" : "重复词，已合并来源");
+            setToast(addedTermToast(data));
             await load();
           }}
         />
@@ -438,6 +438,11 @@ export default function App() {
       <Toast message={toast} onRetry={toastRetry} />
     </div>
   );
+}
+
+function addedTermToast(data) {
+  if (data?.explainError) return data.explainError;
+  return data.created ? "已加入术语本" : "重复词，已合并来源";
 }
 
 function syncFootLabel(sync) {
