@@ -6,6 +6,7 @@ import {
   startNativeSyncLoop,
   syncNow,
   testConnection,
+  withLock,
 } from "./nativeSync.js";
 
 let loopStarted = false;
@@ -27,7 +28,7 @@ export const nativeApi = {
   },
 
   async createTerm(body) {
-    const { term, created } = await nativeStore.upsertTerm(body || {});
+    const { term, created } = await withLock(() => nativeStore.upsertTerm(body || {}));
     const settings = await nativeStore.getSettings();
     const shouldExplain =
       (body?.autoExplain === true ||
@@ -36,10 +37,12 @@ export const nativeApi = {
     if (shouldExplain) {
       try {
         const definition = await runExplain(term, settings);
-        const updated = await nativeStore.updateTerm(term.id, {
-          definition,
-          definitionSource: "ai",
-        });
+        const updated = await withLock(() =>
+          nativeStore.updateTerm(term.id, {
+            definition,
+            definitionSource: "ai",
+          }),
+        );
         queuePush("local-change");
         return { term: updated, created };
       } catch (err) {
@@ -52,13 +55,13 @@ export const nativeApi = {
   },
 
   async updateTerm(id, body) {
-    const term = await nativeStore.updateTerm(id, body || {});
+    const term = await withLock(() => nativeStore.updateTerm(id, body || {}));
     queuePush("local-change");
     return { term };
   },
 
   async deleteTerm(id) {
-    await nativeStore.deleteTerm(id);
+    await withLock(() => nativeStore.deleteTerm(id));
     queuePush("local-change");
     return { ok: true };
   },
@@ -68,16 +71,18 @@ export const nativeApi = {
     if (!term) throw new Error("找不到这个词条");
     const settings = await nativeStore.getSettings();
     const definition = await runExplain(term, settings);
-    const updated = await nativeStore.updateTerm(id, {
-      definition,
-      definitionSource: "ai",
-    });
+    const updated = await withLock(() =>
+      nativeStore.updateTerm(id, {
+        definition,
+        definitionSource: "ai",
+      }),
+    );
     queuePush("local-change");
     return { term: updated };
   },
 
   async saveSettings(body) {
-    const settings = await nativeStore.saveSettings(body || {});
+    const settings = await withLock(() => nativeStore.saveSettings(body || {}));
     if (settings.webdavEnabled) queuePush("local-change");
     return { settings, sync: getSyncStatus(settings) };
   },

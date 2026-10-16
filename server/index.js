@@ -11,6 +11,7 @@ import {
   startSyncLoop,
   syncNow,
   testConnection,
+  withLock,
 } from "./sync.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -55,7 +56,7 @@ app.get("/api/events", (req, res) => {
 });
 
 app.post("/api/terms", asyncHandler(async (req, res) => {
-  const { term, created } = await store.upsertTerm(req.body || {});
+  const { term, created } = await withLock(() => store.upsertTerm(req.body || {}));
   const settings = await store.getSettings();
   const shouldExplain =
     (req.body?.autoExplain === true ||
@@ -65,10 +66,12 @@ app.post("/api/terms", asyncHandler(async (req, res) => {
   if (shouldExplain) {
     try {
       const definition = await explainTerm(term, settings);
-      const updated = await store.updateTerm(term.id, {
-        definition,
-        definitionSource: "ai",
-      });
+      const updated = await withLock(() =>
+        store.updateTerm(term.id, {
+          definition,
+          definitionSource: "ai",
+        }),
+      );
       broadcast({ type: "changed", id: updated.id });
       queuePush("local-change");
       res.status(created ? 201 : 200).json({ term: updated, created });
@@ -91,14 +94,14 @@ app.post("/api/terms", asyncHandler(async (req, res) => {
 }));
 
 app.patch("/api/terms/:id", asyncHandler(async (req, res) => {
-  const term = await store.updateTerm(req.params.id, req.body || {});
+  const term = await withLock(() => store.updateTerm(req.params.id, req.body || {}));
   broadcast({ type: "changed", id: term.id });
   queuePush("local-change");
   res.json({ term });
 }));
 
 app.delete("/api/terms/:id", asyncHandler(async (req, res) => {
-  await store.deleteTerm(req.params.id);
+  await withLock(() => store.deleteTerm(req.params.id));
   broadcast({ type: "changed", id: req.params.id });
   queuePush("local-change");
   res.json({ ok: true });
@@ -113,17 +116,19 @@ app.post("/api/terms/:id/explain", asyncHandler(async (req, res) => {
   }
   const settings = await store.getSettings();
   const definition = await explainTerm(term, settings);
-  const updated = await store.updateTerm(term.id, {
-    definition,
-    definitionSource: "ai",
-  });
+  const updated = await withLock(() =>
+    store.updateTerm(term.id, {
+      definition,
+      definitionSource: "ai",
+    }),
+  );
   broadcast({ type: "changed", id: updated.id });
   queuePush("local-change");
   res.json({ term: updated });
 }));
 
 app.put("/api/settings", asyncHandler(async (req, res) => {
-  const settings = await store.saveSettings(req.body || {});
+  const settings = await withLock(() => store.saveSettings(req.body || {}));
   broadcast({ type: "settings" });
   if (settings.webdavEnabled) queuePush("local-change");
   res.json({ settings, sync: getSyncStatus(settings) });
