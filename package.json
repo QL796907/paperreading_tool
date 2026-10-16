@@ -63,6 +63,7 @@
       "server/**/*",
       "web/dist/**/*",
       "web/src/glossaryLogic.js",
+      "web/src/syncEngine.js",
       "package.json"
     ],
     "extraResources": [
