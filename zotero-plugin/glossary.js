@@ -287,7 +287,9 @@ PaperGlossary = {
         successCodes: [200, 201],
       });
     } catch (err) {
-      throw new Error("连不上本地服务，确认术语本已打开");
+      // successCodes also rejects 4xx/5xx, which still carry {error}.
+      // No response body means the local app never answered.
+      throw new Error(this.apiErrorMessage(err));
     }
     const data = JSON.parse(xhr.responseText || "{}");
     if (data.error) throw new Error(data.error);
@@ -297,5 +299,23 @@ PaperGlossary = {
       term.word || word,
     );
     return data;
+  },
+
+  apiErrorMessage(err) {
+    const raw =
+      err && err.xmlhttp && typeof err.xmlhttp.responseText === "string"
+        ? err.xmlhttp.responseText.trim()
+        : "";
+    if (!raw) return "连不上本地服务，确认术语本已打开";
+    let data = null;
+    try {
+      data = JSON.parse(raw);
+    } catch (parseErr) {
+      data = null;
+    }
+    if (data && data.error != null && String(data.error).trim()) {
+      return String(data.error).trim();
+    }
+    return raw;
   },
 };
