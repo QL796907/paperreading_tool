@@ -22,7 +22,7 @@
 
 ## 目录
 
-- `web/` React UI。桌面走 `api.js`，SSE 触发整页 `load()`。Android 走 `nativeApi.js`；`setNativeSyncListener` 同样调 `load()`，启动更新检查把 `load()` 返回的 `settings` 传给 `checkAppUpdate`。阅读空白页把 `native={isAndroidApp()}` 传给 `EmptyState`。词条 upsert/patch、设置默认值与来源整理只在 `web/src/glossaryLogic.js`：手机 `nativeStore.js` 和电脑 `server/store.js` 都调用这一份。
+- `web/` React UI。桌面走 `api.js`，SSE 触发整页 `load()`。Android 走 `nativeApi.js`；`setNativeSyncListener` 同样调 `load()`，启动更新检查把 `load()` 返回的 `settings` 传给 `checkAppUpdate`。阅读空白页把 `native={isAndroidApp()}` 传给 `EmptyState`。词条 upsert/patch、设置默认值与来源整理只在 `web/src/glossaryLogic.js`：手机 `nativeStore.js` 和电脑 `server/store.js` 都调用这一份。手机读 `terms.json` / `settings.json` 与电脑 `readJson` 一样：只有文件不存在（`ENOENT` 或 Capacitor 的 `File does not exist`）才当空；解析失败或其他读失败抛出，`load()` 提示错误，保存不会接着把空数据写回去。
 - `server/` 仅电脑：词条文件、AI、WebDAV。`store.js` 只读写 JSON，规则走 `glossaryLogic`。Electron 的 `build.files` 要带上 `web/src/glossaryLogic.js`，安装包里的 store 才能 import 到它。
 - `electron/` 桌面壳、托盘、`electron-updater`。
 - `android/` Capacitor 工程；包名 `com.ql796907.paperglossary`。`AndroidManifest.xml` 的 `android:allowBackup` 固定为 `false`（`scripts/setup-android.js` 的 `patchManifest` 在 `cap add` 生成默认清单后写回）。Auto Backup 会带走 `Directory.Data` 里的 `settings.json`，其中有 API key 和坚果云应用密码。`native/android/` 没有清单模板。
