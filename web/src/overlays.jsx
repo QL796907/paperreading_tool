@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "./api.js";
 import { APP_VERSION, isAndroidApp, isNativeApp } from "./platform.js";
 import { checkAppUpdate, downloadAndInstall } from "./apkUpdate.js";
-import { GITHUB_MIRROR_DOCS, githubMirrorOn } from "./githubMirror.js";
+import { GITHUB_MIRROR_DOCS, githubMirrorOn } from "../../electron/githubMirror.js";
 
 export function Overlay({ children, onClose, wide }) {
   return (
