@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { store } from "./store.js";
 import { explainTerm } from "./ai.js";
+import { createTermWithAutoExplain } from "../web/src/createTermFlow.js";
 import {
   getSyncStatus,
   queuePush,
@@ -56,41 +57,15 @@ app.get("/api/events", (req, res) => {
 });
 
 app.post("/api/terms", asyncHandler(async (req, res) => {
-  const { term, created } = await withLock(() => store.upsertTerm(req.body || {}));
-  const settings = await store.getSettings();
-  const shouldExplain =
-    (req.body?.autoExplain === true ||
-      (req.body?.autoExplain !== false && settings.autoExplain)) &&
-    !term.definition;
-
-  if (shouldExplain) {
-    try {
-      const definition = await explainTerm(term, settings);
-      const updated = await withLock(() =>
-        store.updateTerm(term.id, {
-          definition,
-          definitionSource: "ai",
-        }),
-      );
-      broadcast({ type: "changed", id: updated.id });
-      queuePush("local-change");
-      res.status(created ? 201 : 200).json({ term: updated, created });
-      return;
-    } catch (err) {
-      broadcast({ type: "changed", id: term.id });
-      queuePush("local-change");
-      res.status(created ? 201 : 200).json({
-        term,
-        created,
-        explainError: err.message,
-      });
-      return;
-    }
-  }
-
-  broadcast({ type: "changed", id: term.id });
+  const result = await createTermWithAutoExplain({
+    body: req.body,
+    withLock,
+    store,
+    explainTerm,
+  });
+  broadcast({ type: "changed", id: result.term.id });
   queuePush("local-change");
-  res.status(created ? 201 : 200).json({ term, created });
+  res.status(result.created ? 201 : 200).json(result);
 }));
 
 app.patch("/api/terms/:id", asyncHandler(async (req, res) => {
