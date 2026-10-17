@@ -229,6 +229,14 @@ function notify(title, body) {
   tray?.displayBalloon?.({ title, content: body });
 }
 
+// checkForUpdates 失败会先 emit "error" 再 reject。对话框只写在这里：
+// 监听和 catch 都进来时，第一次清掉标志，第二次不再弹框。
+function showManualUpdateError(err) {
+  if (!manualUpdateCheck) return;
+  manualUpdateCheck = false;
+  dialog.showErrorBox("检查更新失败", err?.message || String(err));
+}
+
 function setupAutoUpdater() {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
@@ -280,10 +288,7 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on("error", (err) => {
-    if (manualUpdateCheck) {
-      manualUpdateCheck = false;
-      dialog.showErrorBox("检查更新失败", err?.message || String(err));
-    }
+    showManualUpdateError(err);
   });
 
   if (!app.isPackaged) return;
@@ -308,10 +313,7 @@ async function checkForUpdates(manual) {
     applyUpdateFeed();
     await autoUpdater.checkForUpdates();
   } catch (err) {
-    if (manual) {
-      manualUpdateCheck = false;
-      dialog.showErrorBox("检查更新失败", err?.message || String(err));
-    }
+    showManualUpdateError(err);
   }
 }
 
