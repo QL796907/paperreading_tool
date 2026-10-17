@@ -74,6 +74,14 @@ function patchManifest() {
   if (!xml.includes("fileprovider")) {
     xml = xml.replace("</application>", `${provider}\n    </application>`);
   }
+  // cap add 的默认清单是 allowBackup=true。自动备份会带走 Directory.Data/settings.json。
+  xml = xml.replace(/android:allowBackup="[^"]*"/g, 'android:allowBackup="false"');
+  if (!xml.includes("android:allowBackup=")) {
+    xml = xml.replace(
+      "<application",
+      '<application\n        android:allowBackup="false"',
+    );
+  }
   fs.writeFileSync(manifestPath, xml, "utf8");
 }
 

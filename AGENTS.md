@@ -25,7 +25,7 @@
 - `web/` React UI。桌面走 `api.js`，SSE 触发整页 `load()`。Android 走 `nativeApi.js`；`setNativeSyncListener` 同样调 `load()`，启动更新检查把 `load()` 返回的 `settings` 传给 `checkAppUpdate`。阅读空白页把 `native={isAndroidApp()}` 传给 `EmptyState`。词条 upsert/patch、设置默认值与来源整理只在 `web/src/glossaryLogic.js`：手机 `nativeStore.js` 和电脑 `server/store.js` 都调用这一份。
 - `server/` 仅电脑：词条文件、AI、WebDAV。`store.js` 只读写 JSON，规则走 `glossaryLogic`。Electron 的 `build.files` 要带上 `web/src/glossaryLogic.js`，安装包里的 store 才能 import 到它。
 - `electron/` 桌面壳、托盘、`electron-updater`。
-- `android/` Capacitor 工程；包名 `com.ql796907.paperglossary`。
+- `android/` Capacitor 工程；包名 `com.ql796907.paperglossary`。`AndroidManifest.xml` 的 `android:allowBackup` 固定为 `false`（`scripts/setup-android.js` 的 `patchManifest` 在 `cap add` 生成默认清单后写回）。Auto Backup 会带走 `Directory.Data` 里的 `settings.json`，其中有 API key 和坚果云应用密码。`native/android/` 没有清单模板。
 - `native/android/` 原生插件源，setup 时拷进 `android/`。`WebDavPlugin` 用 OkHttp 发 PROPFIND / MKCOL：手机系统网络库不认这两个方法，坚果云「测试连接」和建目录必须走它。
 - `zotero-plugin/` Zotero 7 插件。
 - `scripts/` `pack-plugin.js`、`build-apk.js`、`setup-android.js`、`with-proxy.js`、`make-icons.js`（方案 E 绿框学印，电脑/手机同一套）。
