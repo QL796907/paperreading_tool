@@ -63,6 +63,7 @@
       "server/**/*",
       "web/dist/**/*",
       "web/src/glossaryLogic.js",
+      "web/src/glossaryStore.js",
       "web/src/syncEngine.js",
       "web/src/webdavProtocol.js",
       "package.json"
