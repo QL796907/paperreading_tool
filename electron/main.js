@@ -13,7 +13,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import updater from "electron-updater";
-import { GITHUB_MIRROR_PREFIX, withGithubMirror } from "../web/src/githubMirror.js";
+import { GITHUB_MIRROR_PREFIX, withGithubMirror } from "./githubMirror.js";
 
 const autoUpdater = updater.autoUpdater ?? updater;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
