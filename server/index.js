@@ -135,14 +135,7 @@ app.put("/api/settings", asyncHandler(async (req, res) => {
 }));
 
 app.post("/api/sync/test", asyncHandler(async (req, res) => {
-  const body = req.body || {};
-  const settings = await store.getSettings();
-  const result = await testConnection({
-    webdavUrl: body.webdavUrl ?? settings.webdavUrl,
-    webdavUser: body.webdavUser ?? settings.webdavUser,
-    webdavPassword: body.webdavPassword || settings.webdavPassword,
-    webdavPath: body.webdavPath ?? settings.webdavPath,
-  });
+  const result = await testConnection(req.body || {});
   res.json(result);
 }));
 

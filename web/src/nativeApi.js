@@ -87,6 +87,7 @@ export const nativeApi = {
     return { settings, sync: getSyncStatus(settings) };
   },
 
+  // 口令整理在 syncEngine.normalizeTestCredentials，和电脑 POST /api/sync/test 同一套。
   testSync: (body) => testConnection(body || {}),
   syncNow: () => syncNow("manual"),
 };
