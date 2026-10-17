@@ -39,6 +39,8 @@ if (!gotLock) {
   app.on("second-instance", () => {
     showWindow();
   });
+  // quit() 取消不了已注册的 whenReady，没拿到锁的进程仍会去听 3780 并弹出 EADDRINUSE。
+  app.whenReady().then(startPrimaryInstance);
 }
 
 function isDevUi() {
@@ -327,7 +329,7 @@ async function waitForHealth(timeoutMs = 20000) {
   throw new Error("本地服务没有启动起来");
 }
 
-app.whenReady().then(async () => {
+async function startPrimaryInstance() {
   process.env.GLOSSARY_DATA_DIR = app.isPackaged
     ? app.getPath("userData")
     : path.join(projectRoot, "data");
@@ -358,7 +360,7 @@ app.whenReady().then(async () => {
   createTray();
   createWindow();
   setupAutoUpdater();
-});
+}
 
 app.on("before-quit", () => {
   quitting = true;
