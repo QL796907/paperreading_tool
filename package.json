@@ -66,6 +66,7 @@
       "web/src/glossaryStore.js",
       "web/src/syncEngine.js",
       "web/src/webdavProtocol.js",
+      "web/src/explainTerm.js",
       "package.json"
     ],
     "extraResources": [
