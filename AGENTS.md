@@ -11,7 +11,7 @@
 | 端 | 形态 | 更新 |
 | --- | --- | --- |
 | Windows | Electron + NSIS，关窗进托盘 | GitHub Release + `electron-updater`（`latest.yml`）。设置里「使用镜像下载更新」默认开，走 `https://gh.4o.pw/` 前缀；说明 https://gh.4o.pw/docs |
-| Android | Capacitor WebView，无 Zotero 划词；词条在本地，坚果云 WebDAV 同步。后台同步通过 `setNativeSyncListener` 把状态写进页脚 | `updates/android.json` 的 `version` + **`versionCode`**。清单和 APK 下载同样可走 gh.4o.pw 镜像。启动静默检查用这次 `load()` 已取到的设置：`githubMirrorEnabled === false` 才直连 |
+| Android | Capacitor WebView，无 Zotero 划词；词条在本地，坚果云 WebDAV 同步。后台同步通过 `setNativeSyncListener` 调 `load()`，拉回的词条和页脚一起刷新 | `updates/android.json` 的 `version` + **`versionCode`**。清单和 APK 下载同样可走 gh.4o.pw 镜像。启动静默检查用这次 `load()` 已取到的设置：`githubMirrorEnabled === false` 才直连 |
 | Zotero | 插件 xpi | `manifest.json` 的 `update_url` → `updates/zotero.json` |
 
 电脑开发时还有 Express（`server/`，端口 3780）+ Vite（`web/`，5173）。手机 APK **不跑 Express**，走 `web/src/native*.js`。
@@ -22,7 +22,7 @@
 
 ## 目录
 
-- `web/` React UI。桌面走 `api.js`，SSE 触发整页 `load()`。Android 走 `nativeApi.js`；页脚只订阅 `nativeSync.js` 的 listener，启动更新检查把 `load()` 返回的 `settings` 传给 `checkAppUpdate`。词条 upsert/patch、设置默认值与来源整理只在 `web/src/glossaryLogic.js`：手机 `nativeStore.js` 和电脑 `server/store.js` 都调用这一份。
+- `web/` React UI。桌面走 `api.js`，SSE 触发整页 `load()`。Android 走 `nativeApi.js`；`setNativeSyncListener` 同样调 `load()`，启动更新检查把 `load()` 返回的 `settings` 传给 `checkAppUpdate`。阅读空白页把 `native={isAndroidApp()}` 传给 `EmptyState`。词条 upsert/patch、设置默认值与来源整理只在 `web/src/glossaryLogic.js`：手机 `nativeStore.js` 和电脑 `server/store.js` 都调用这一份。
 - `server/` 仅电脑：词条文件、AI、WebDAV。`store.js` 只读写 JSON，规则走 `glossaryLogic`。Electron 的 `build.files` 要带上 `web/src/glossaryLogic.js`，安装包里的 store 才能 import 到它。
 - `electron/` 桌面壳、托盘、`electron-updater`。
 - `android/` Capacitor 工程；包名 `com.ql796907.paperglossary`。
