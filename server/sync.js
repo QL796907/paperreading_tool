@@ -25,7 +25,8 @@ export function setSyncListener(fn) {
   onChanged = typeof fn === "function" ? fn : () => {};
 }
 
-function withLock(fn) {
+// 同步先读整本再写回。词条和设置的读改写必须走这条链，否则快照会盖掉并发保存。
+export function withLock(fn) {
   const run = chain.then(fn, fn);
   chain = run.then(
     () => {},
