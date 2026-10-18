@@ -8,6 +8,21 @@
 const PUSH_DEBOUNCE_MS = 1800;
 const PULL_EVERY_MS = 5 * 60 * 1000;
 
+/**
+ * 测试连接用的账号。请求里出现的字段（包括空字符串）以请求为准；
+ * 没带的字段才用已保存的设置。
+ */
+export function normalizeTestCredentials(body, settings) {
+  const input = body && typeof body === "object" ? body : {};
+  const saved = settings && typeof settings === "object" ? settings : {};
+  return {
+    webdavUrl: input.webdavUrl ?? saved.webdavUrl ?? "",
+    webdavUser: input.webdavUser ?? saved.webdavUser ?? "",
+    webdavPassword: input.webdavPassword ?? saved.webdavPassword ?? "",
+    webdavPath: input.webdavPath ?? saved.webdavPath ?? "",
+  };
+}
+
 function envelopeTime(envelope, fallbackHeader) {
   if (envelope?.updatedAt) {
     const ts = Date.parse(envelope.updatedAt);
@@ -89,11 +104,12 @@ export function createSyncEngine({
   }
 
   async function testConnection(input) {
+    const creds = normalizeTestCredentials(input, await getSettings());
     return testDav({
-      url: input.webdavUrl,
-      user: input.webdavUser,
-      password: input.webdavPassword,
-      remotePath: input.webdavPath,
+      url: creds.webdavUrl,
+      user: creds.webdavUser,
+      password: creds.webdavPassword,
+      remotePath: creds.webdavPath,
     });
   }
 
