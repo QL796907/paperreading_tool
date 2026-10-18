@@ -24,7 +24,7 @@ if (!fs.existsSync(keystore)) {
   process.exit(1);
 }
 
-const result = spawnSync(gradle, ["assembleRelease", "-I", "mirror.init.gradle"], {
+const result = spawnSync(gradle, ["assembleRelease"], {
   cwd: androidDir,
   stdio: "inherit",
   shell: true,
