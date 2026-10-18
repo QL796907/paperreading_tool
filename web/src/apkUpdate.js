@@ -1,7 +1,12 @@
 import { registerPlugin } from "@capacitor/core";
 import { httpRequest } from "./http.js";
 import { APP_VERSION, isAndroidApp } from "./platform.js";
-import { githubMirrorOn, withGithubMirror } from "../../electron/githubMirror.js";
+import {
+  GITHUB_FILE_HOST_SUFFIXES,
+  GITHUB_MIRROR_PREFIX,
+  githubMirrorOn,
+  withGithubMirror,
+} from "../../electron/githubMirror.js";
 
 const MANIFEST_URL =
   "https://raw.githubusercontent.com/QL796907/paperreading_tool/main/updates/android.json";
@@ -50,7 +55,11 @@ export async function downloadAndInstall(url, onProgress) {
     onProgress?.(info);
   });
   try {
-    const { path } = await ApkUpdater.download({ url });
+    const { path } = await ApkUpdater.download({
+      url,
+      prefix: GITHUB_MIRROR_PREFIX,
+      hostSuffixes: GITHUB_FILE_HOST_SUFFIXES,
+    });
     await ApkUpdater.install({ path });
     return { ok: true };
   } finally {

@@ -13,7 +13,12 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import updater from "electron-updater";
-import { GITHUB_MIRROR_PREFIX, withGithubMirror } from "./githubMirror.js";
+import {
+  GITHUB_FILE_HOST_SUFFIXES,
+  GITHUB_MIRROR_PREFIX,
+  githubMirrorOn,
+  withGithubMirror,
+} from "./githubMirror.js";
 
 const autoUpdater = updater.autoUpdater ?? updater;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -170,15 +175,13 @@ function rebuildTrayMenu() {
 function githubMirrorEnabled() {
   try {
     const dir = process.env.GLOSSARY_DATA_DIR;
-    if (!dir) return true;
+    if (!dir) return githubMirrorOn();
     const saved = JSON.parse(fs.readFileSync(path.join(dir, "settings.json"), "utf8"));
-    if (Object.prototype.hasOwnProperty.call(saved, "githubMirrorEnabled")) {
-      return saved.githubMirrorEnabled !== false;
-    }
+    return githubMirrorOn(saved);
   } catch {
     /* 还没写出设置文件时默认开镜像 */
   }
-  return true;
+  return githubMirrorOn();
 }
 
 function applyUpdateFeed() {
@@ -199,12 +202,10 @@ function applyUpdateFeed() {
 function setupGithubMirrorIntercept() {
   session.defaultSession.webRequest.onBeforeRequest(
     {
-      urls: [
-        "https://github.com/*",
-        "https://*.github.com/*",
-        "https://githubusercontent.com/*",
-        "https://*.githubusercontent.com/*",
-      ],
+      urls: GITHUB_FILE_HOST_SUFFIXES.flatMap((suffix) => [
+        `https://${suffix}/*`,
+        `https://*.${suffix}/*`,
+      ]),
     },
     (details, callback) => {
       if (!githubMirrorEnabled()) {
