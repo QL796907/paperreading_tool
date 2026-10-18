@@ -64,6 +64,7 @@
       "web/dist/**/*",
       "web/src/glossaryLogic.js",
       "web/src/syncEngine.js",
+      "web/src/webdavProtocol.js",
       "package.json"
     ],
     "extraResources": [
