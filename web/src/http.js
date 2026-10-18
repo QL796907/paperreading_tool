@@ -62,7 +62,7 @@ export async function httpRequest({
     }
   }
 
-  if (Capacitor.isNativePlatform()) {
+  if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android") {
     try {
       const res = await CapacitorHttp.request({
         method: verb,
@@ -85,27 +85,7 @@ export async function httpRequest({
     }
   }
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, {
-      method,
-      headers,
-      body,
-      signal: controller.signal,
-    });
-    const text = await res.text();
-    const hdrs = {};
-    res.headers.forEach((value, key) => {
-      hdrs[key] = value;
-    });
-    return { status: res.status, text, headers: hdrs };
-  } catch (err) {
-    if (err.name === "AbortError") throw fail("连接超时，请检查网络", 504);
-    throw fail("连不上服务器，请检查地址和网络", 502);
-  } finally {
-    clearTimeout(timer);
-  }
+  throw fail("只能在 Android 应用里发这个请求");
 }
 
 export function basicAuth(user, password) {
