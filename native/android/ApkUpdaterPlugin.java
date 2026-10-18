@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import androidx.core.content.FileProvider;
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -16,6 +17,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Locale;
 
 @CapacitorPlugin(name = "ApkUpdater")
 public class ApkUpdaterPlugin extends Plugin {
@@ -46,6 +48,8 @@ public class ApkUpdaterPlugin extends Plugin {
       call.reject("缺少下载地址");
       return;
     }
+    String prefix = call.getString("prefix");
+    JSArray hostSuffixes = call.getArray("hostSuffixes");
     new Thread(
             () -> {
               HttpURLConnection conn = null;
@@ -58,16 +62,13 @@ public class ApkUpdaterPlugin extends Plugin {
                 conn.connect();
                 int status = conn.getResponseCode();
                 int hops = 0;
-                boolean viaMirror = url.startsWith("https://gh.4o.pw/");
+                boolean viaMirror = prefix != null && !prefix.isEmpty() && url.startsWith(prefix);
                 while (status >= 300 && status < 400 && hops < 5) {
                   String next = conn.getHeaderField("Location");
                   conn.disconnect();
                   if (next == null || next.isEmpty()) break;
-                  if (viaMirror
-                      && !next.startsWith("https://gh.4o.pw/")
-                      && (next.startsWith("https://github.com/")
-                          || next.contains("githubusercontent.com"))) {
-                    next = "https://gh.4o.pw/" + next;
+                  if (viaMirror && !next.startsWith(prefix) && hostMatchesSuffix(next, hostSuffixes)) {
+                    next = prefix + next;
                   }
                   conn = (HttpURLConnection) new URL(next).openConnection();
                   conn.setInstanceFollowRedirects(false);
@@ -145,5 +146,24 @@ public class ApkUpdaterPlugin extends Plugin {
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     activity.startActivity(intent);
     call.resolve();
+  }
+
+  /** 主机等于后缀，或是以「.后缀」结尾的子域。规则与 githubMirror.js 一致。 */
+  private static boolean hostMatchesSuffix(String url, JSArray suffixes) {
+    if (suffixes == null) return false;
+    String host;
+    try {
+      host = new URL(url).getHost();
+    } catch (Exception err) {
+      return false;
+    }
+    if (host == null || host.isEmpty()) return false;
+    host = host.toLowerCase(Locale.ROOT);
+    for (int i = 0; i < suffixes.length(); i++) {
+      String suffix = suffixes.optString(i, "").toLowerCase(Locale.ROOT);
+      if (suffix.isEmpty()) continue;
+      if (host.equals(suffix) || host.endsWith("." + suffix)) return true;
+    }
+    return false;
   }
 }

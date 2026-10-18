@@ -1,6 +1,9 @@
 export const GITHUB_MIRROR_PREFIX = "https://gh.4o.pw/";
 export const GITHUB_MIRROR_DOCS = "https://gh.4o.pw/docs";
 
+/** 这些主机以及它们的子域才会加上镜像前缀。桌面拦截和 APK 重定向共用这一份。 */
+export const GITHUB_FILE_HOST_SUFFIXES = ["github.com", "githubusercontent.com"];
+
 function hostnameOf(url) {
   try {
     return new URL(url).hostname.toLowerCase();
@@ -11,11 +14,8 @@ function hostnameOf(url) {
 
 export function isGithubFileHost(url) {
   const host = hostnameOf(url);
-  return (
-    host === "github.com" ||
-    host.endsWith(".github.com") ||
-    host === "githubusercontent.com" ||
-    host.endsWith(".githubusercontent.com")
+  return GITHUB_FILE_HOST_SUFFIXES.some(
+    (suffix) => host === suffix || host.endsWith(`.${suffix}`),
   );
 }
 
