@@ -67,6 +67,7 @@
       "web/src/syncEngine.js",
       "web/src/webdavProtocol.js",
       "web/src/explainTerm.js",
+      "web/src/createTermFlow.js",
       "package.json"
     ],
     "extraResources": [
