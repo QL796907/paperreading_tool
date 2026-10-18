@@ -1,5 +1,6 @@
 import { nativeStore } from "./nativeStore.js";
 import { explainTerm as runExplain } from "./nativeAi.js";
+import { createTermWithAutoExplain } from "./createTermFlow.js";
 import {
   getSyncStatus,
   queuePush,
@@ -28,30 +29,14 @@ export const nativeApi = {
   },
 
   async createTerm(body) {
-    const { term, created } = await withLock(() => nativeStore.upsertTerm(body || {}));
-    const settings = await nativeStore.getSettings();
-    const shouldExplain =
-      (body?.autoExplain === true ||
-        (body?.autoExplain !== false && settings.autoExplain)) &&
-      !term.definition;
-    if (shouldExplain) {
-      try {
-        const definition = await runExplain(term, settings);
-        const updated = await withLock(() =>
-          nativeStore.updateTerm(term.id, {
-            definition,
-            definitionSource: "ai",
-          }),
-        );
-        queuePush("local-change");
-        return { term: updated, created };
-      } catch (err) {
-        queuePush("local-change");
-        return { term, created, explainError: err.message };
-      }
-    }
+    const result = await createTermWithAutoExplain({
+      body,
+      withLock,
+      store: nativeStore,
+      explainTerm: runExplain,
+    });
     queuePush("local-change");
-    return { term, created };
+    return result;
   },
 
   async updateTerm(id, body) {
@@ -87,6 +72,7 @@ export const nativeApi = {
     return { settings, sync: getSyncStatus(settings) };
   },
 
+  // 口令整理在 syncEngine.normalizeTestCredentials，和电脑 POST /api/sync/test 同一套。
   testSync: (body) => testConnection(body || {}),
   syncNow: () => syncNow("manual"),
 };
