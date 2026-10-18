@@ -197,40 +197,7 @@ export default function App() {
 
   const dayCount = dates.filter(([, n]) => n > 0).length;
 
-  if (reading) {
-    return (
-      <>
-        <ReadingMode
-          terms={terms}
-          startDate={activeDate}
-          onExit={() => setReading(false)}
-          onDateChange={setActiveDate}
-          onChanged={(next) => {
-            setTerms((prev) => prev.map((item) => (item.id === next.id ? next : item)));
-          }}
-          onRequestDelete={setPendingDelete}
-          onToast={setToast}
-        />
-        {pendingDelete ? (
-          <ConfirmDelete
-            term={pendingDelete}
-            onCancel={() => setPendingDelete(null)}
-            onConfirm={async () => {
-              try {
-                await api.deleteTerm(pendingDelete.id);
-                await handleDeleted(pendingDelete.id);
-              } catch (err) {
-                setToast(err.message);
-              }
-            }}
-          />
-        ) : null}
-        <Toast message={toast} onRetry={toastRetry} />
-      </>
-    );
-  }
-
-  return (
+  const desk = (
     <div className="desk">
       <div className={`book ${drawer ? "drawer-open" : ""}`}>
         <aside className="index">
@@ -414,6 +381,26 @@ export default function App() {
         />
       ) : null}
 
+    </div>
+  );
+
+  return (
+    <>
+      {reading ? (
+        <ReadingMode
+          terms={terms}
+          startDate={activeDate}
+          onExit={() => setReading(false)}
+          onDateChange={setActiveDate}
+          onChanged={(next) => {
+            setTerms((prev) => prev.map((item) => (item.id === next.id ? next : item)));
+          }}
+          onRequestDelete={setPendingDelete}
+          onToast={setToast}
+        />
+      ) : (
+        desk
+      )}
       {pendingDelete ? (
         <ConfirmDelete
           term={pendingDelete}
@@ -428,9 +415,8 @@ export default function App() {
           }}
         />
       ) : null}
-
       <Toast message={toast} onRetry={toastRetry} />
-    </div>
+    </>
   );
 }
 
