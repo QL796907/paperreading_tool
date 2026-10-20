@@ -52,7 +52,7 @@
 3. **`README.md` 给会下载安装、但不懂代码的普通人看**，也就是 GitHub Release 说明。第一次发版整篇写成：这是什么、能帮什么忙 → 下哪个包、怎么安装打开、第一次怎么用 → 真会卡住人的小提示。中文，一两分钟能读完，轻松但别夸张。不要写技术栈、编译、API、贡献指南。之后每次发版只增量更新版本号、下载链接、会变的用法。没改 README 不算发完。日常改功能不要动 README。
 4. 没有 `AGENTS.md` 就自动创建；每轮结束后只更新有变化的段落。
 5. **验收时 Android 必须能编过** 才算完。没 SDK、Gradle 挂了、缺 keystore：必须说明失败点，不能假装做完。纯文档、纯规则、或只改 Zotero 且不发版，可以不编，但要写明原因。
-6. APK 签名：`android/glossary.keystore` + `android/keystore.properties`，不进 git。换电脑先拷这两份，**禁止默默新建钥匙**。新建时密码只读环境变量 `GLOSSARY_KEYSTORE_PASSWORD`，不要写进脚本。
+6. APK 签名：`android/glossary.keystore` + `android/keystore.properties`，不进 git。换电脑先拷这两份，**禁止默默新建钥匙**。新建时密码只读环境变量 `GLOSSARY_KEYSTORE_PASSWORD`，不要写进脚本。2026-10-20 ql 确认旧钥匙丢失后新建了一把；已经装过术语本的手机要先卸载，才能装这把新钥匙签的包。密码只在本机的 `keystore.properties`。
 7. 不要把 API Key、WebDAV 密码、keystore 密码写进仓库或聊天。
 
 ## 发版时改什么
