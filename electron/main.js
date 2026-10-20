@@ -97,7 +97,7 @@ function createWindow() {
   }
 
   // Windows 系统标题栏会把最小化 / 最大化 / 关闭画得很小。
-  // 无边框后由页面按 40×46 画这三个按钮，preload 只暴露这三件事。
+  // 无边框后由页面按 48×58 画这三个按钮，preload 只暴露这三件事。
   const windowsShell = process.platform === "win32";
   const webPreferences = {
     contextIsolation: true,

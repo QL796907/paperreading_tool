@@ -815,8 +815,8 @@ textarea:focus-visible {
 
 /* Windows 无边框窗口：标题栏按钮跟页内按钮同一量级，不再用系统缩小后的标题栏。 */
 html.desktop-shell {
-  --titlebar-height: 40px;
-  --titlebar-button: 46px;
+  --titlebar-height: 48px;
+  --titlebar-button: 58px;
   --titlebar-controls: calc(var(--titlebar-button) * 3);
 }
 
@@ -881,11 +881,11 @@ html.desktop-shell .reading-desk {
 }
 
 .win-controls svg {
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
   stroke: currentColor;
   fill: none;
-  stroke-width: 1.6;
+  stroke-width: 2;
   stroke-linecap: square;
 }
 
