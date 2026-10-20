@@ -1,6 +1,6 @@
 {
-  "version": "1.0.3",
-  "versionCode": 4,
-  "url": "https://github.com/QL796907/paperreading_tool/releases/download/v1.0.3/paper-glossary-1.0.3.apk",
-  "notes": "图标改成当初那本掀开封面的立书。设置里默认勾选「使用镜像下载更新」，走 gh.4o.pw。"
+  "version": "1.0.4",
+  "versionCode": 5,
+  "url": "https://github.com/QL796907/paperreading_tool/releases/download/v1.0.4/paper-glossary-1.0.4.apk",
+  "notes": "划词加入是一颗能看出来的按钮。手机上测试连接的结果会显示在按钮下面。已经装过的手机请先卸载再装，签名换了。"
 }
