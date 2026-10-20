@@ -8,6 +8,7 @@ import {
   Notification,
   shell,
   session,
+  ipcMain,
 } from "electron";
 import path from "path";
 import fs from "fs";
@@ -76,10 +77,35 @@ function showWindow() {
   mainWindow.focus();
 }
 
+function bindDesktopWindowControls() {
+  const win = () => (mainWindow && !mainWindow.isDestroyed() ? mainWindow : null);
+  ipcMain.on("desktop-window:minimize", () => win()?.minimize());
+  ipcMain.on("desktop-window:toggle-maximize", () => {
+    const current = win();
+    if (!current) return;
+    if (current.isMaximized()) current.unmaximize();
+    else current.maximize();
+  });
+  ipcMain.on("desktop-window:close", () => win()?.close());
+  ipcMain.handle("desktop-window:is-maximized", () => Boolean(win()?.isMaximized()));
+}
+
 function createWindow() {
   if (mainWindow && !mainWindow.isDestroyed()) {
     showWindow();
     return;
+  }
+
+  // Windows 系统标题栏会把最小化 / 最大化 / 关闭画得很小。
+  // 无边框后由页面按 40×46 画这三个按钮，preload 只暴露这三件事。
+  const windowsShell = process.platform === "win32";
+  const webPreferences = {
+    contextIsolation: true,
+    nodeIntegration: false,
+    sandbox: true,
+  };
+  if (windowsShell) {
+    webPreferences.preload = path.join(__dirname, "preload.cjs");
   }
 
   mainWindow = new BrowserWindow({
@@ -88,14 +114,12 @@ function createWindow() {
     minWidth: 840,
     minHeight: 560,
     show: false,
+    frame: !windowsShell,
+    thickFrame: true,
     backgroundColor: "#2c241c",
     autoHideMenuBar: true,
     icon: iconPath("icon.ico"),
-    webPreferences: {
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-    },
+    webPreferences,
   });
 
   Menu.setApplicationMenu(null);
@@ -127,6 +151,14 @@ function createWindow() {
       });
     }
   });
+
+  const publishMaximized = () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("desktop-window:maximized", mainWindow.isMaximized());
+    }
+  };
+  mainWindow.on("maximize", publishMaximized);
+  mainWindow.on("unmaximize", publishMaximized);
 
   mainWindow.on("closed", () => {
     mainWindow = null;
@@ -333,6 +365,7 @@ async function waitForHealth(timeoutMs = 20000) {
 }
 
 async function startPrimaryInstance() {
+  bindDesktopWindowControls();
   process.env.GLOSSARY_DATA_DIR = app.isPackaged
     ? app.getPath("userData")
     : path.join(projectRoot, "data");
