@@ -1,9 +1,10 @@
 /**
  * WebDAV 协议：拼地址、测账号、建父目录、下载和上传术语本。
  * request 负责把请求发出去，并返回 { status, text, etag, lastModified, location }。
- * 电脑用 Node fetch（redirect: manual），手机用 httpRequest，传输不在这里。
- * 301/302/307/308 在这里按原方法重放。交给 fetch / OkHttp 跟随的话，MKCOL 会被改成 GET，
- * 坚果云文件夹建不出来，而「测试连接」只 PROPFIND 根目录，仍然显示成功。
+ * 电脑用 Node fetch（redirect: manual），手机 WebDAV 的 httpRequest 也要 redirect: manual。
+ * 传输不在这里。301/302/307/308 在这里按原方法重放，并且不跨主机。
+ * 传输层若自己跟随，跳转落地的 200/201/204 会被当成上传或下载成功，应用密码也可能被带到别的网站。
+ * MKCOL 被跟随的话还会被改成 GET，文件夹建不出来，「测试连接」只 PROPFIND 根目录却仍然显示成功。
  */
 
 function fail(message, status = 400) {
