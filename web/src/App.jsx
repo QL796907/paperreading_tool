@@ -246,7 +246,11 @@ export default function App() {
             {syncFootLabel(sync) ? (
               <>
                 <br />
-                <button type="button" className="text-btn sync-foot" onClick={openSettings}>
+                <button
+                  type="button"
+                  className={`text-btn sync-foot${sync?.lastError ? " is-error" : ""}`}
+                  onClick={openSettings}
+                >
                   {syncFootLabel(sync)}
                 </button>
               </>
@@ -428,7 +432,7 @@ function addedTermToast(data) {
 function syncFootLabel(sync) {
   if (!sync?.enabled) return "";
   if (sync.busy) return "正在同步…";
-  if (sync.lastError) return "同步失败，打开设置";
+  if (sync.lastError) return `同步失败：${sync.lastError}`;
   if (!sync.configured) return "坚果云还没填完";
   if (!sync.lastSyncedAt) return "等待同步";
   const ts = Date.parse(sync.lastSyncedAt);

@@ -35,6 +35,8 @@ async function davRequest({
         ...headers,
       },
       body,
+      // 不让 fetch 自己跟随。301/302 会把 MKCOL / PUT 改成 GET，文件夹建不出来。
+      redirect: "manual",
       signal: controller.signal,
     });
     const text = await res.text();
@@ -43,6 +45,7 @@ async function davRequest({
       text,
       etag: res.headers.get("etag"),
       lastModified: res.headers.get("last-modified"),
+      location: res.headers.get("location"),
     };
   } catch (err) {
     if (err.name === "AbortError") {

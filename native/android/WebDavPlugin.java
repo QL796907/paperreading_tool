@@ -48,8 +48,9 @@ public class WebDavPlugin extends Plugin {
             .connectTimeout(timeout, TimeUnit.MILLISECONDS)
             .readTimeout(timeout, TimeUnit.MILLISECONDS)
             .writeTimeout(timeout, TimeUnit.MILLISECONDS)
-            .followRedirects(true)
-            .followSslRedirects(true)
+            // 301/302 若由 OkHttp 跟随，MKCOL 会被改成 GET。跳转交回协议层按原方法重发。
+            .followRedirects(false)
+            .followSslRedirects(false)
             .build();
 
     Request.Builder builder = new Request.Builder().url(url);

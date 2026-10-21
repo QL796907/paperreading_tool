@@ -24,6 +24,7 @@ async function davRequest({ method, url, user, password, body, headers = {} }) {
     text: res.text,
     etag: get("etag"),
     lastModified: get("last-modified"),
+    location: get("location"),
   };
 }
 
