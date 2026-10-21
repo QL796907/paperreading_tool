@@ -62,6 +62,7 @@
       "electron/**/*",
       "server/**/*",
       "shared/**/*",
+      "!shared/**/*.test.js",
       "web/dist/**/*",
       "package.json"
     ],
