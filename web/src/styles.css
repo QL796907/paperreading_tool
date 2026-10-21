@@ -820,3 +820,85 @@ textarea:focus-visible {
   outline: none;
   box-shadow: 0 1px 0 var(--seal);
 }
+
+/* Windows 无边框窗口：标题栏按钮跟页内按钮同一量级，不再用系统缩小后的标题栏。 */
+html.desktop-shell {
+  --titlebar-height: 48px;
+  --titlebar-button: 58px;
+  --titlebar-controls: calc(var(--titlebar-button) * 3);
+}
+
+html.desktop-shell .desk {
+  padding-top: var(--titlebar-height);
+}
+
+html.desktop-shell .desk::before {
+  content: "";
+  position: fixed;
+  z-index: 4;
+  top: 0;
+  left: 0;
+  right: var(--titlebar-controls);
+  height: var(--titlebar-height);
+  background: var(--paper);
+  -webkit-app-region: drag;
+}
+
+html.desktop-shell .book {
+  height: min(720px, calc(100vh - var(--titlebar-height) - 24px));
+}
+
+html.desktop-shell .reading-desk {
+  padding-top: calc(var(--titlebar-height) + 16px);
+}
+
+.win-controls {
+  position: fixed;
+  z-index: 40;
+  top: 0;
+  right: 0;
+  display: flex;
+  height: var(--titlebar-height);
+  background: var(--paper);
+  -webkit-app-region: no-drag;
+}
+
+.win-controls button {
+  width: var(--titlebar-button);
+  height: var(--titlebar-height);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+}
+
+.win-controls button:hover {
+  background: rgba(31, 26, 20, 0.08);
+}
+
+.win-controls button.close:hover {
+  background: var(--danger);
+  color: var(--paper);
+}
+
+.win-controls button:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--seal);
+}
+
+.win-controls svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: square;
+}
+
+@media (max-width: 900px) {
+  html.desktop-shell .book {
+    height: calc(100vh - var(--titlebar-height) - 12px);
+  }
+}
