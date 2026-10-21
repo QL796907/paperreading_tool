@@ -364,6 +364,8 @@ function writeAndroid() {
     writePng(path.join(dir, "ic_launcher.png"), square);
     writePng(path.join(dir, "ic_launcher_round.png"), circleMask(square));
     writePng(path.join(dir, "ic_launcher_foreground.png"), makeForeground(d.foreground));
+    // API 26+ 的 @mipmap/ic_launcher 是 adaptive-icon XML，<bitmap> 画不出印章。
+    writePng(path.join(res, `drawable-${d.name}`, "splash_icon.png"), square);
   }
 
   fs.writeFileSync(
@@ -381,7 +383,7 @@ function writeAndroid() {
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@mipmap/ic_launcher" />
+            android:src="@drawable/splash_icon" />
     </item>
 </layer-list>
 `;
