@@ -357,7 +357,7 @@ export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
             当前版本 {APP_VERSION}。安装包从 GitHub Releases 下载。
             {android
               ? " 手机点下面检查并安装。Zotero 插件不走这里，它在 Zotero 的「插件」里自己更新。"
-              : " 电脑版会在后台检查，关掉窗口后自动装上。也可在托盘菜单点「检查更新」。"}
+              : " 电脑版在后台下载。下好后点页面上的「现在更新」，会静默装好并重新打开，不弹出安装窗口。从托盘退出时也会静默安装。只关窗口不会退出。"}
           </p>
           <label className="check">
             <input

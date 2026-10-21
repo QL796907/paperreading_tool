@@ -902,3 +902,50 @@ html.desktop-shell .reading-desk {
     height: calc(100vh - var(--titlebar-height) - 12px);
   }
 }
+
+.update-bar {
+  position: fixed;
+  z-index: 25;
+  top: var(--titlebar-height, 0px);
+  left: 0;
+  right: 0;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--seal);
+  color: var(--paper);
+  -webkit-app-region: no-drag;
+}
+
+.update-bar button {
+  height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--seal);
+}
+
+.update-bar button:disabled {
+  opacity: 0.7;
+}
+
+html.has-update .desk {
+  padding-top: calc(var(--titlebar-height, 0px) + 48px);
+}
+
+html.has-update .book {
+  height: min(720px, calc(100vh - var(--titlebar-height, 0px) - 48px - 24px));
+}
+
+html.has-update .reading-desk {
+  padding-top: calc(var(--titlebar-height, 0px) + 48px + 16px);
+}
+
+@media (max-width: 900px) {
+  html.has-update .book {
+    height: calc(100vh - var(--titlebar-height, 0px) - 48px - 12px);
+  }
+}

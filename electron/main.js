@@ -34,6 +34,7 @@ let httpServer = null;
 let quitting = false;
 let trayHintShown = false;
 let manualUpdateCheck = false;
+let pendingUpdateVersion = null;
 
 app.setName("术语本");
 app.setAppUserModelId("com.ql796907.paper-glossary");
@@ -75,6 +76,7 @@ function showWindow() {
   if (mainWindow.isMinimized()) mainWindow.restore();
   mainWindow.show();
   mainWindow.focus();
+  publishPendingUpdate();
 }
 
 function bindDesktopWindowControls() {
@@ -97,7 +99,7 @@ function createWindow() {
   }
 
   // Windows 系统标题栏会把最小化 / 最大化 / 关闭画得很小。
-  // 无边框后由页面按 48×58 画这三个按钮，preload 只暴露这三件事。
+  // 无边框后由页面按 48×58 画这三个按钮。preload 同时暴露更新条。
   const windowsShell = process.platform === "win32";
   const webPreferences = {
     contextIsolation: true,
@@ -128,6 +130,7 @@ function createWindow() {
     ? "http://127.0.0.1:5173/"
     : `http://127.0.0.1:${PORT}/`;
   mainWindow.loadURL(url);
+  mainWindow.webContents.on("did-finish-load", publishPendingUpdate);
 
   mainWindow.once("ready-to-show", () => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.show();
@@ -180,6 +183,12 @@ function rebuildTrayMenu() {
     Menu.buildFromTemplate([
       { label: "打开术语本", click: () => showWindow() },
       { type: "separator" },
+      ...(pendingUpdateVersion
+        ? [{
+            label: `安装更新 ${pendingUpdateVersion}`,
+            click: () => installDownloadedUpdate(),
+          }]
+        : []),
       {
         label: "检查更新",
         click: () => checkForUpdates(true),
@@ -196,8 +205,8 @@ function rebuildTrayMenu() {
       {
         label: "退出",
         click: () => {
-          quitting = true;
-          app.quit();
+          // 在菜单回调里直接 quit，Windows 会把退出取消掉，进程留在任务管理器里。
+          setImmediate(() => quitApp());
         },
       },
     ]),
@@ -270,6 +279,17 @@ function showManualUpdateError(err) {
   dialog.showErrorBox("检查更新失败", err?.message || String(err));
 }
 
+function publishPendingUpdate() {
+  if (!pendingUpdateVersion || !mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.webContents.send("desktop-update:ready", pendingUpdateVersion);
+}
+
+function installDownloadedUpdate() {
+  if (!pendingUpdateVersion) return;
+  // 静默安装：/S，不弹出 NSIS 安装窗口。退出时 before-quit 会拆掉托盘。
+  autoUpdater.quitAndInstall(true, true);
+}
+
 function setupAutoUpdater() {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
@@ -295,28 +315,16 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on("update-downloaded", (info) => {
-    notify(
-      "术语本已准备好更新",
-      `新版本 ${info.version} 已下载。现在退出，或下次关掉术语本时会自动安装。`,
-    );
-    if (manualUpdateCheck) {
-      manualUpdateCheck = false;
-      dialog
-        .showMessageBox({
-          type: "info",
-          title: "术语本",
-          message: `新版本 ${info.version} 已下载完成。`,
-          detail: "选择现在重启安装，或等下次退出时自动装上。",
-          buttons: ["现在重启安装", "下次退出时安装"],
-          defaultId: 0,
-          cancelId: 1,
-        })
-        .then((result) => {
-          if (result.response === 0) {
-            quitting = true;
-            autoUpdater.quitAndInstall(false, true);
-          }
-        });
+    pendingUpdateVersion = info.version;
+    manualUpdateCheck = false;
+    rebuildTrayMenu();
+    publishPendingUpdate();
+    const visible = mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible();
+    if (!visible) {
+      notify(
+        "术语本已准备好更新",
+        `新版本 ${info.version} 已下载。打开术语本后点「现在更新」，不会弹出安装窗口。`,
+      );
     }
   });
 
@@ -336,7 +344,7 @@ async function checkForUpdates(manual) {
         type: "info",
         title: "术语本",
         message: "开发模式不检查更新。",
-        detail: "安装包会从 GitHub Releases 下载新版本，后台装好，退出后生效。",
+        detail: "安装包会在应用里下载。下好后点「现在更新」，静默装好并重新打开。",
       });
     }
     return;
@@ -366,6 +374,8 @@ async function waitForHealth(timeoutMs = 20000) {
 
 async function startPrimaryInstance() {
   bindDesktopWindowControls();
+  ipcMain.on("desktop-update:install", () => installDownloadedUpdate());
+  ipcMain.handle("desktop-update:ready", () => pendingUpdateVersion || "");
   process.env.GLOSSARY_DATA_DIR = app.isPackaged
     ? app.getPath("userData")
     : path.join(projectRoot, "data");
@@ -398,18 +408,53 @@ async function startPrimaryInstance() {
   setupAutoUpdater();
 }
 
+function destroyTray() {
+  if (tray && !tray.isDestroyed()) {
+    tray.destroy();
+    tray = null;
+  }
+}
+
+function shutdownServer() {
+  const server = httpServer;
+  if (!server) return;
+  httpServer = null;
+  try {
+    server.closeAllConnections?.();
+  } catch {
+    /* ignore */
+  }
+  try {
+    server.close();
+  } catch {
+    /* ignore */
+  }
+}
+
+let forceExitArmed = false;
+
+function quitApp() {
+  quitting = true;
+  destroyTray();
+  shutdownServer();
+  if (!forceExitArmed) {
+    forceExitArmed = true;
+    // quit 被托盘或未断开的连接拖住时，进程会一直留着。
+    setTimeout(() => app.exit(0), 1000);
+  }
+  app.quit();
+}
+
 app.on("before-quit", () => {
   quitting = true;
+  destroyTray();
+  shutdownServer();
+  if (!forceExitArmed) {
+    forceExitArmed = true;
+    setTimeout(() => app.exit(0), 1000);
+  }
 });
 
 app.on("window-all-closed", () => {
   // 关掉窗口仍留在托盘，Zotero 才能继续连本地接口。
-});
-
-app.on("will-quit", () => {
-  try {
-    httpServer?.close();
-  } catch {
-    /* ignore */
-  }
 });

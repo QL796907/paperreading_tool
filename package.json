@@ -81,6 +81,7 @@
       }
     ],
     "win": {
+      "executableName": "paper-glossary",
       "icon": "build/icon.ico",
       "target": [
         {
