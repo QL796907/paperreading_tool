@@ -22,7 +22,8 @@ import okhttp3.ResponseBody;
 /**
  * Android 的 HttpURLConnection 只允许 GET/POST/PUT 等少数方法。
  * CapacitorHttp 走那条路，PROPFIND / MKCOL 会直接被拒绝，坚果云「测试连接」就失败。
- * 这里用 OkHttp 发任意方法。
+ * 这里用 OkHttp 发这些方法，并且不跟随跳转。
+ * 响应体超过 1MB 会截断，术语本 GET 不走这里；GET/PUT 的跳转由 WebDAV 调用方在 CapacitorHttp 上关掉跟随。
  */
 @CapacitorPlugin(name = "WebDav")
 public class WebDavPlugin extends Plugin {

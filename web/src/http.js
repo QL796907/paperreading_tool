@@ -50,13 +50,16 @@ export async function httpRequest({
   headers = {},
   body,
   timeoutMs = 25000,
+  redirect = "follow",
 }) {
   const verb = String(method || "GET").toUpperCase();
-  if (
-    Capacitor.isNativePlatform() &&
-    Capacitor.getPlatform() === "android" &&
-    !SYSTEM_METHODS.has(verb)
-  ) {
+  const manual = redirect === "manual";
+  const android =
+    Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android";
+
+  // PROPFIND / MKCOL 系统库不认，只能走插件。插件把响应体截到 1MB，
+  // 术语本 GET 不能走它。GET/PUT 要看跳转状态时留在 CapacitorHttp，由调用方传 redirect: "manual"。
+  if (android && !SYSTEM_METHODS.has(verb)) {
     try {
       const res = await WebDav.request({
         method: verb,
@@ -76,7 +79,7 @@ export async function httpRequest({
     }
   }
 
-  if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android") {
+  if (android) {
     try {
       const res = await CapacitorHttp.request({
         method: verb,
@@ -85,6 +88,8 @@ export async function httpRequest({
         data: body ?? undefined,
         connectTimeout: timeoutMs,
         readTimeout: timeoutMs,
+        // 不传时 CapacitorHttp 继续跟随。只有 WebDAV 传 manual。
+        ...(manual ? { disableRedirects: true } : {}),
       });
       const data = res.data;
       const text =
