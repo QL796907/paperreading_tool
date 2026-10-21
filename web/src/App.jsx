@@ -5,6 +5,7 @@ import { checkAppUpdate } from "./apkUpdate.js";
 import { setNativeSyncListener } from "./nativeSync.js";
 import TermCard from "./TermCard.jsx";
 import ReadingMode from "./ReadingMode.jsx";
+import DesktopUpdateBar from "./DesktopUpdateBar.jsx";
 import {
   AddModal,
   SettingsModal,
@@ -386,6 +387,7 @@ export default function App() {
 
   return (
     <>
+      <DesktopUpdateBar />
       {reading ? (
         <ReadingMode
           terms={terms}
