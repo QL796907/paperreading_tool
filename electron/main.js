@@ -175,8 +175,8 @@ function rebuildTrayMenu() {
       {
         label: "退出",
         click: () => {
-          quitting = true;
-          app.quit();
+          // 在菜单回调里直接 quit，Windows 会把退出取消掉，进程留在任务管理器里。
+          setImmediate(() => quitApp());
         },
       },
     ]),
@@ -377,23 +377,53 @@ async function startPrimaryInstance() {
   setupAutoUpdater();
 }
 
-app.on("before-quit", () => {
-  quitting = true;
-  // 托盘还在时，Windows 上进程不会退出，安装包就会一直说「无法关闭」。
+function destroyTray() {
   if (tray && !tray.isDestroyed()) {
     tray.destroy();
     tray = null;
+  }
+}
+
+function shutdownServer() {
+  const server = httpServer;
+  if (!server) return;
+  httpServer = null;
+  try {
+    server.closeAllConnections?.();
+  } catch {
+    /* ignore */
+  }
+  try {
+    server.close();
+  } catch {
+    /* ignore */
+  }
+}
+
+let forceExitArmed = false;
+
+function quitApp() {
+  quitting = true;
+  destroyTray();
+  shutdownServer();
+  if (!forceExitArmed) {
+    forceExitArmed = true;
+    // quit 被托盘或未断开的连接拖住时，进程会一直留着。
+    setTimeout(() => app.exit(0), 1000);
+  }
+  app.quit();
+}
+
+app.on("before-quit", () => {
+  quitting = true;
+  destroyTray();
+  shutdownServer();
+  if (!forceExitArmed) {
+    forceExitArmed = true;
+    setTimeout(() => app.exit(0), 1000);
   }
 });
 
 app.on("window-all-closed", () => {
   // 关掉窗口仍留在托盘，Zotero 才能继续连本地接口。
-});
-
-app.on("will-quit", () => {
-  try {
-    httpServer?.close();
-  } catch {
-    /* ignore */
-  }
 });
