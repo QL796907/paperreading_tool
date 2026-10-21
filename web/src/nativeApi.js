@@ -1,6 +1,6 @@
 import { nativeStore } from "./nativeStore.js";
 import { explainTerm as runExplain } from "./nativeAi.js";
-import { createTermWithAutoExplain } from "./createTermFlow.js";
+import { createTermWithAutoExplain } from "../../shared/createTermFlow.js";
 import {
   getSyncStatus,
   queuePush,

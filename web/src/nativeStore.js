@@ -1,6 +1,6 @@
 import { registerPlugin } from "@capacitor/core";
 import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
-import { createGlossaryStore } from "./glossaryStore.js";
+import { createGlossaryStore } from "../../shared/glossaryStore.js";
 
 // Directory.Data 就是 context.getFilesDir()。临时文件必须和正式文件在同一目录，
 // 下面的 replace 才能用一次 rename 盖掉旧文件。

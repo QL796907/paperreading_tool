@@ -1,5 +1,5 @@
 import { httpRequest } from "./http.js";
-import { explainTerm as explain } from "./explainTerm.js";
+import { explainTerm as explain } from "../../shared/explainTerm.js";
 
 async function postChat({ url, headers, body, timeoutMs }) {
   const res = await httpRequest({

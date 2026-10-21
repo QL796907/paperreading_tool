@@ -4,7 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { store } from "./store.js";
 import { explainTerm } from "./ai.js";
-import { createTermWithAutoExplain } from "../web/src/createTermFlow.js";
+import { createTermWithAutoExplain } from "../shared/createTermFlow.js";
 import {
   getSyncStatus,
   queuePush,
