@@ -1,9 +1,9 @@
 /**
  * 电脑端 WebDAV 传输：Node 18 自带的 fetch。
- * 测连、下载、上传、建目录和拼地址在 web/src/webdavProtocol.js。
+ * 测连、下载、上传、建目录和拼地址在 shared/webdavProtocol.js。
  */
 
-import { createDavClient } from "../web/src/webdavProtocol.js";
+import { createDavClient } from "../shared/webdavProtocol.js";
 
 function fail(message, status = 400) {
   const error = new Error(message);

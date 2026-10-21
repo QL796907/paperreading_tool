@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
-import { createGlossaryStore } from "../web/src/glossaryStore.js";
+import { createGlossaryStore } from "../shared/glossaryStore.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

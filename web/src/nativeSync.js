@@ -1,6 +1,6 @@
 import { nativeStore } from "./nativeStore.js";
 import { downloadTerms, testDav, uploadTerms } from "./webdavClient.js";
-import { createSyncEngine } from "./syncEngine.js";
+import { createSyncEngine } from "../../shared/syncEngine.js";
 
 const sync = createSyncEngine({
   readEnvelope: () => nativeStore.readEnvelope(),

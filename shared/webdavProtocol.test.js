@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import http from "node:http";
 import test from "node:test";
-import { uploadTerms as nodeUploadTerms } from "../../server/webdav.js";
+import { uploadTerms as nodeUploadTerms } from "../server/webdav.js";
 import { createDavClient } from "./webdavProtocol.js";
 
 const creds = {

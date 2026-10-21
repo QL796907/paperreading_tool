@@ -61,13 +61,9 @@
     "files": [
       "electron/**/*",
       "server/**/*",
+      "shared/**/*",
+      "!shared/**/*.test.js",
       "web/dist/**/*",
-      "web/src/glossaryLogic.js",
-      "web/src/glossaryStore.js",
-      "web/src/syncEngine.js",
-      "web/src/webdavProtocol.js",
-      "web/src/explainTerm.js",
-      "web/src/createTermFlow.js",
       "package.json"
     ],
     "extraResources": [

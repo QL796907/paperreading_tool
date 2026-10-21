@@ -1,6 +1,6 @@
 import { store } from "./store.js";
 import { downloadTerms, uploadTerms, testDav } from "./webdav.js";
-import { createSyncEngine } from "../web/src/syncEngine.js";
+import { createSyncEngine } from "../shared/syncEngine.js";
 
 const sync = createSyncEngine({
   readEnvelope: () => store.readEnvelope(),

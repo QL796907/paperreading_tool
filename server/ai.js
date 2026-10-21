@@ -1,4 +1,4 @@
-import { explainTerm as explain } from "../web/src/explainTerm.js";
+import { explainTerm as explain } from "../shared/explainTerm.js";
 
 async function postChat({ url, headers, body, timeoutMs }) {
   const controller = new AbortController();

@@ -1,12 +1,12 @@
 /**
  * 手机端 WebDAV 传输：走 httpRequest。
  * PROPFIND / MKCOL 经原生插件。GET / PUT 留在 CapacitorHttp，但 redirect 为 manual，
- * 301/302 交回 webdavProtocol.js。术语本 GET 不走插件，插件会把响应体截到 1MB。
- * 测连、下载、上传、建目录和拼地址在 webdavProtocol.js。
+ * 301/302 交回 shared/webdavProtocol.js。术语本 GET 不走插件，插件会把响应体截到 1MB。
+ * 测连、下载、上传、建目录和拼地址在 shared/webdavProtocol.js。
  */
 
 import { basicAuth, httpRequest } from "./http.js";
-import { createDavClient } from "./webdavProtocol.js";
+import { createDavClient } from "../../shared/webdavProtocol.js";
 
 function headerValue(headers, name) {
   if (!headers || typeof headers !== "object") return null;
