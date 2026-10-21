@@ -1,6 +1,6 @@
 {
-  "version": "1.0.4",
-  "versionCode": 5,
-  "url": "https://github.com/QL796907/paperreading_tool/releases/download/v1.0.4/paper-glossary-1.0.4.apk",
-  "notes": "划词加入是一颗能看出来的按钮。手机上测试连接的结果会显示在按钮下面。已经装过的手机请先卸载再装，签名换了。"
+  "version": "1.0.5",
+  "versionCode": 6,
+  "url": "https://github.com/QL796907/paperreading_tool/releases/download/v1.0.5/paper-glossary-1.0.5.apk",
+  "notes": "同步失败时，左下角会写出原因。已经装上 1.0.4 的可以直接更新；更早的版本签名不同，要先卸载。"
 }

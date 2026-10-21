@@ -3,6 +3,13 @@
 ; installer keeps reporting that the app cannot be closed.
 ; Stop every process whose executable lives in the install directory, then
 ; fall through to the stock check (paper-glossary.exe).
+;
+; This file is included before allowOnlyOneInstallerInstance.nsh. That file
+; skips getProcessInfo.nsh once customCheckAppRunning exists, so include it
+; here or ${GetProcessInfo} is an invalid command.
+!include "getProcessInfo.nsh"
+Var pid
+
 !macro customCheckAppRunning
   StrCpy $R8 "$INSTDIR"
   ${If} $R8 != ""
