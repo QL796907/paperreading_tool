@@ -31,6 +31,19 @@ function readableNetworkError(err) {
   return msg || "网络请求失败";
 }
 
+// 超时在这里标成 AbortError。文案保持坚果云那句；模型超时的句子只在 explainTerm 里换。
+function isNetworkTimeout(err) {
+  if (!err) return false;
+  if (err.name === "AbortError" || err.status === 504) return true;
+  return /timeout|timed out|超时/i.test(String(err.message || ""));
+}
+
+function networkTimeout() {
+  const error = new Error("连接超时，请检查网络");
+  error.name = "AbortError";
+  return error;
+}
+
 export async function httpRequest({
   method,
   url,
@@ -58,6 +71,7 @@ export async function httpRequest({
         headers: res.headers || {},
       };
     } catch (err) {
+      if (isNetworkTimeout(err)) throw networkTimeout();
       throw fail(readableNetworkError(err), 502);
     }
   }
@@ -81,6 +95,7 @@ export async function httpRequest({
         headers: res.headers || {},
       };
     } catch (err) {
+      if (isNetworkTimeout(err)) throw networkTimeout();
       throw fail(err?.message || "网络请求失败", 502);
     }
   }
