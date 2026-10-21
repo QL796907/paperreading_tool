@@ -30,6 +30,10 @@ function patchMainActivity() {
     path.join(root, "native", "android", "WebDavPlugin.java"),
     path.join(javaDir, "WebDavPlugin.java"),
   );
+  fs.copyFileSync(
+    path.join(root, "native", "android", "GlossaryFilePlugin.java"),
+    path.join(javaDir, "GlossaryFilePlugin.java"),
+  );
   const main = path.join(javaDir, "MainActivity.java");
   fs.writeFileSync(
     main,
@@ -42,6 +46,7 @@ public class MainActivity extends BridgeActivity {
   public void onCreate(android.os.Bundle savedInstanceState) {
     registerPlugin(ApkUpdaterPlugin.class);
     registerPlugin(WebDavPlugin.class);
+    registerPlugin(GlossaryFilePlugin.class);
     super.onCreate(savedInstanceState);
   }
 }
