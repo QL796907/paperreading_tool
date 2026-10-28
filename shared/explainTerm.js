@@ -1,9 +1,13 @@
+import { explainTimeoutMs } from "./explainBudget.js";
+
 /**
  * 术语解析的请求体和回复解析只留这一份，避免电脑和手机各写一套再分叉。
  * post({ url, headers, body, timeoutMs }) 发出请求，返回 { status, statusText, text }。
  * 超时抛 name 为 AbortError 的错误。手机上这条错误的文案仍是「连接超时，请检查网络」，
  * 只有这里换成 504 和「模型请求超时，请稍后重试」。
+ * 模型等待的毫秒数在 explainBudget.js，Zotero 那一次 POST 用同一份预算加余量。
  */
+
 export async function explainTerm(term, settings, post) {
   const base = String(settings.apiBaseUrl || "").replace(/\/$/, "");
   if (!base) {
@@ -45,7 +49,7 @@ export async function explainTerm(term, settings, post) {
           { role: "user", content: userContent },
         ],
       }),
-      timeoutMs: 60000,
+      timeoutMs: explainTimeoutMs,
     });
   } catch (err) {
     if (err?.name === "AbortError") {
