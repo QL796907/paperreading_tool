@@ -3,6 +3,7 @@ import crypto from "crypto";
 import path from "path";
 import { fileURLToPath } from "url";
 import JSZip from "jszip";
+import { pluginBudgetSource } from "./pluginBudget.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
@@ -27,6 +28,12 @@ const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
 if (manifest.version !== pkg.version) {
   manifest.version = pkg.version;
   await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+}
+
+const budgetPath = path.join(pluginDir, "explainBudget.js");
+const budgetSource = pluginBudgetSource();
+if ((await fs.readFile(budgetPath, "utf8").catch(() => "")) !== budgetSource) {
+  await fs.writeFile(budgetPath, budgetSource);
 }
 
 const zip = new JSZip();

@@ -278,12 +278,20 @@ PaperGlossary = {
     };
     // The selection is the headword. Do not store it again as context
     // until a surrounding sentence exists.
+    // One POST. explainClientWaitMs is the model timeout plus the tail
+    // the server needs to answer after that timeout. Do not send it again.
+    const budget =
+      typeof PaperGlossaryBudget === "undefined" ? null : PaperGlossaryBudget;
+    const timeout = budget && budget.explainClientWaitMs;
+    if (!Number.isFinite(timeout)) {
+      throw new Error("术语本插件缺少解析超时预算");
+    }
     let xhr;
     try {
       xhr = await Zotero.HTTP.request("POST", url, {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
-        timeout: 45000,
+        timeout,
         successCodes: [200, 201],
       });
     } catch (err) {
