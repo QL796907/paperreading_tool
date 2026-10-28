@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { spawnSync } from "child_process";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -12,32 +12,9 @@ function run(cmd, args, cwd = root) {
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
-function patchMainActivity() {
-  const javaDir = path.join(
-    androidDir,
-    "app",
-    "src",
-    "main",
-    "java",
-    ...pkg.split("."),
-  );
-  fs.mkdirSync(javaDir, { recursive: true });
-  fs.copyFileSync(
-    path.join(root, "native", "android", "ApkUpdaterPlugin.java"),
-    path.join(javaDir, "ApkUpdaterPlugin.java"),
-  );
-  fs.copyFileSync(
-    path.join(root, "native", "android", "WebDavPlugin.java"),
-    path.join(javaDir, "WebDavPlugin.java"),
-  );
-  fs.copyFileSync(
-    path.join(root, "native", "android", "GlossaryFilePlugin.java"),
-    path.join(javaDir, "GlossaryFilePlugin.java"),
-  );
-  const main = path.join(javaDir, "MainActivity.java");
-  fs.writeFileSync(
-    main,
-    `package ${pkg};
+/** MainActivity 的唯一模板。注册哪些插件只改这里。 */
+export function mainActivitySource(packageName = pkg) {
+  return `package ${packageName};
 
 import com.getcapacitor.BridgeActivity;
 
@@ -50,8 +27,52 @@ public class MainActivity extends BridgeActivity {
     super.onCreate(savedInstanceState);
   }
 }
-`,
+`;
+}
+
+/**
+ * 把 native/android 写成 android/app 里的唯一副本。
+ * 插件 Java 和 file_paths.xml 只从 native/android 拷贝；MainActivity.java 只来自上面的模板。
+ * 该包目录里多出来的 .java 删掉，避免手改或旧类留下来当第二份源。
+ */
+export function syncNativeSources({
+  projectRoot = root,
+  androidRoot = androidDir,
+  packageName = pkg,
+} = {}) {
+  const nativeDir = path.join(projectRoot, "native", "android");
+  const pluginNames = fs
+    .readdirSync(nativeDir)
+    .filter((name) => name.endsWith(".java") && name !== "MainActivity.java");
+  const javaDir = path.join(
+    androidRoot,
+    "app",
+    "src",
+    "main",
+    "java",
+    ...packageName.split("."),
+  );
+  fs.mkdirSync(javaDir, { recursive: true });
+  const keep = new Set([...pluginNames, "MainActivity.java"]);
+  for (const name of fs.readdirSync(javaDir)) {
+    if (name.endsWith(".java") && !keep.has(name)) {
+      fs.unlinkSync(path.join(javaDir, name));
+    }
+  }
+  for (const name of pluginNames) {
+    fs.copyFileSync(path.join(nativeDir, name), path.join(javaDir, name));
+  }
+  fs.writeFileSync(
+    path.join(javaDir, "MainActivity.java"),
+    mainActivitySource(packageName),
     "utf8",
+  );
+
+  const xmlDir = path.join(androidRoot, "app", "src", "main", "res", "xml");
+  fs.mkdirSync(xmlDir, { recursive: true });
+  fs.copyFileSync(
+    path.join(nativeDir, "file_paths.xml"),
+    path.join(xmlDir, "file_paths.xml"),
   );
 }
 
@@ -88,15 +109,6 @@ function patchManifest() {
     );
   }
   fs.writeFileSync(manifestPath, xml, "utf8");
-}
-
-function copyXml() {
-  const xmlDir = path.join(androidDir, "app", "src", "main", "res", "xml");
-  fs.mkdirSync(xmlDir, { recursive: true });
-  fs.copyFileSync(
-    path.join(root, "native", "android", "file_paths.xml"),
-    path.join(xmlDir, "file_paths.xml"),
-  );
 }
 
 function keystorePassword() {
@@ -274,17 +286,29 @@ function writeLocalProperties() {
   );
 }
 
-if (!fs.existsSync(path.join(androidDir, "app"))) {
-  run("npx", ["cap", "add", "android"]);
+function main() {
+  if (!fs.existsSync(path.join(androidDir, "app"))) {
+    run("npx", ["cap", "add", "android"]);
+  }
+  run("npx", ["cap", "sync", "android"]);
+  run("node", [path.join(root, "scripts", "make-icons.js")]);
+  syncNativeSources();
+  patchManifest();
+  ensureKeystore();
+  patchGradle();
+  patchVersion();
+  patchGradleProxy();
+  writeLocalProperties();
+  console.log("Android 工程已接好 APK 更新插件。");
 }
-run("npx", ["cap", "sync", "android"]);
-run("node", [path.join(root, "scripts", "make-icons.js")]);
-patchMainActivity();
-patchManifest();
-copyXml();
-ensureKeystore();
-patchGradle();
-patchVersion();
-patchGradleProxy();
-writeLocalProperties();
-console.log("Android 工程已接好 APK 更新插件。");
+
+const invokedDirectly =
+  process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+
+if (invokedDirectly) {
+  if (process.argv.includes("--sync-sources")) {
+    syncNativeSources();
+  } else {
+    main();
+  }
+}
