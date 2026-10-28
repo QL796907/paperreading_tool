@@ -16,7 +16,7 @@
 
 电脑开发时还有 Express（`server/`，端口 3780）+ Vite（`web/`，5173）。手机 APK **不跑 Express**，走 `web/src/native*.js`。
 
-应用图标以 ql 敲定的 Grokbot 示例为准：奶油圆角方印、森林绿双线框、立着的墨色书、封面是掀起的折线（不是词条横杠、也不是盖在书上的黑块）、朱红角点在右上。电脑、手机、启动页同一套，由 `scripts/make-icons.js` 出图。启动图层 `<bitmap>` 用各密度 `drawable-*/splash_icon.png`（真位图）；`@mipmap/ic_launcher` 在 API 26+ 是自适应图标 XML，不能放进 `<bitmap>`，但可以当作 `windowSplashScreenAnimatedIcon`。`AppTheme.NoActionBarLaunch` 还要写 `windowSplashScreenBackground`、`windowSplashScreenAnimatedIcon`、`postSplashScreenTheme`。`android:setup` 会覆盖 Capacitor 默认蓝标。不要再手改各密度 PNG。
+应用图标以 ql 敲定的 Grokbot 示例为准：奶油圆角方印、森林绿双线框、立着的墨色书、封面是掀起的折线（不是词条横杠、也不是盖在书上的黑块）、朱红角点在右上。电脑、手机、启动页同一套，由 `scripts/make-icons.js` 出图。启动图层 `<bitmap>` 用各密度 `drawable-*/splash_icon.png`（真位图）；`@mipmap/ic_launcher` 在 API 26+ 是自适应图标 XML，不能放进 `<bitmap>`，但可以当作 `windowSplashScreenAnimatedIcon`。`AppTheme.NoActionBarLaunch` 还要写 `windowSplashScreenBackground`、`windowSplashScreenAnimatedIcon`、`postSplashScreenTheme`。`android:setup` 会覆盖 Capacitor 默认蓝标。奶油底色只留 `values/ic_launcher_background.xml` 里的 `@color/ic_launcher_background`。`make-icons.js` 不再写 `drawable/ic_launcher_background.xml`，再跑时会删掉残留的 shape。不要再手改各密度 PNG。
 
 当前对外版本是 **`1.0.5` / `versionCode` 6**（2026-10-21：标题栏按钮、应用内静默更新、托盘退出会结束进程、同步失败写出原因）。日常改功能不要 bump；只有 ql 说发版才改。下次发版：`1.0.5` → `1.0.6`，`versionCode` 6 → 7。
 

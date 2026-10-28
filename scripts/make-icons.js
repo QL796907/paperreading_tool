@@ -402,14 +402,9 @@ function writeAndroid() {
   walk(res);
   for (const file of splashPngs) fs.unlinkSync(file);
 
-  fs.writeFileSync(
-    path.join(res, "drawable", "ic_launcher_background.xml"),
-    `<?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#F4ECD8" />
-</shape>
-`,
-  );
+  // 自适应图标、splash.xml、windowSplashScreenBackground 都用 @color。这份 shape 没有引用。
+  const shapeBg = path.join(res, "drawable", "ic_launcher_background.xml");
+  if (fs.existsSync(shapeBg)) fs.unlinkSync(shapeBg);
 
   const robot = path.join(res, "drawable-v24", "ic_launcher_foreground.xml");
   if (fs.existsSync(robot)) fs.unlinkSync(robot);
