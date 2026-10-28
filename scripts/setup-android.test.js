@@ -13,6 +13,26 @@ function javaDirOf(androidRoot, name) {
   return path.join(androidRoot, "app", "src", "main", "java", ...name.split("."));
 }
 
+test("splash handoff uses a NoActionBar theme and is installed before super.onCreate", () => {
+  const source = mainActivitySource();
+  const installAt = source.indexOf("SplashScreen.installSplashScreen(this);");
+  const superAt = source.indexOf("super.onCreate(savedInstanceState);");
+  assert.ok(installAt !== -1);
+  assert.ok(superAt !== -1);
+  assert.ok(installAt < superAt);
+
+  const styles = fs.readFileSync(
+    path.join(repoRoot, "android", "app", "src", "main", "res", "values", "styles.xml"),
+    "utf8",
+  );
+  assert.match(styles, /name="AppTheme\.NoActionBar" parent="Theme\.AppCompat\.Light\.NoActionBar"/);
+  assert.match(styles, /name="postSplashScreenTheme">@style\/AppTheme\.NoActionBar</);
+  assert.match(styles, /name="android:background">@drawable\/splash</);
+  assert.match(styles, /name="windowSplashScreenBackground">@color\/ic_launcher_background</);
+  assert.match(styles, /name="windowSplashScreenAnimatedIcon">@mipmap\/ic_launcher</);
+  assert.doesNotMatch(styles, /name="postSplashScreenTheme">@style\/AppTheme</);
+});
+
 test("committed android copies match native sources and the MainActivity template", () => {
   const nativeDir = path.join(repoRoot, "native", "android");
   const javaDir = javaDirOf(path.join(repoRoot, "android"), packageName);

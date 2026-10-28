@@ -12,15 +12,18 @@ function run(cmd, args, cwd = root) {
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
-/** MainActivity 的唯一模板。注册哪些插件只改这里。 */
+/** MainActivity 的唯一模板。注册哪些插件、以及启动屏安装，只改这里。 */
 export function mainActivitySource(packageName = pkg) {
   return `package ${packageName};
 
+import androidx.core.splashscreen.SplashScreen;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(android.os.Bundle savedInstanceState) {
+    // postSplashScreenTheme 只在 super.onCreate 之前安装才会套上。
+    SplashScreen.installSplashScreen(this);
     registerPlugin(ApkUpdaterPlugin.class);
     registerPlugin(WebDavPlugin.class);
     registerPlugin(GlossaryFilePlugin.class);
