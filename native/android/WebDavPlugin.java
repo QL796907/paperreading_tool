@@ -6,7 +6,7 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import java.io.IOException;
-import java.net.SocketTimeoutException;
+import java.io.InterruptedIOException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
@@ -29,6 +29,19 @@ import okhttp3.ResponseBody;
 public class WebDavPlugin extends Plugin {
   private static final int MAX_BODY = 1024 * 1024;
 
+  // 全插件一个客户端。连接池和调度器挂在客户端上；按请求新建就不会复用，也不会关掉。
+  // 阶段超时为 0（不限）。默认 10 秒读超时会比调用方的 timeoutMs 更早断开。
+  // 单次时限在 Call.timeout() 上设置。
+  private final OkHttpClient client =
+      new OkHttpClient.Builder()
+          .connectTimeout(0, TimeUnit.MILLISECONDS)
+          .readTimeout(0, TimeUnit.MILLISECONDS)
+          .writeTimeout(0, TimeUnit.MILLISECONDS)
+          // 301/302 若由 OkHttp 跟随，MKCOL 会被改成 GET。跳转交回协议层按原方法重发。
+          .followRedirects(false)
+          .followSslRedirects(false)
+          .build();
+
   @PluginMethod
   public void request(PluginCall call) {
     String url = call.getString("url");
@@ -43,16 +56,6 @@ public class WebDavPlugin extends Plugin {
     Integer timeoutBoxed = call.getInt("timeoutMs", 25000);
     int timeout = timeoutBoxed == null ? 25000 : timeoutBoxed;
     JSObject headers = call.getObject("headers", new JSObject());
-
-    OkHttpClient client =
-        new OkHttpClient.Builder()
-            .connectTimeout(timeout, TimeUnit.MILLISECONDS)
-            .readTimeout(timeout, TimeUnit.MILLISECONDS)
-            .writeTimeout(timeout, TimeUnit.MILLISECONDS)
-            // 301/302 若由 OkHttp 跟随，MKCOL 会被改成 GET。跳转交回协议层按原方法重发。
-            .followRedirects(false)
-            .followSslRedirects(false)
-            .build();
 
     Request.Builder builder = new Request.Builder().url(url);
     if (headers != null) {
@@ -78,12 +81,16 @@ public class WebDavPlugin extends Plugin {
       builder.method(method, RequestBody.create(media, body.getBytes(StandardCharsets.UTF_8)));
     }
 
-    try (Response response = client.newCall(builder.build()).execute()) {
-      JSObject ret = new JSObject();
-      ret.put("status", response.code());
-      ret.put("text", readBody(response.body()));
-      ret.put("headers", flattenHeaders(response.headers()));
-      call.resolve(ret);
+    try {
+      okhttp3.Call httpCall = client.newCall(builder.build());
+      httpCall.timeout().timeout(timeout, TimeUnit.MILLISECONDS);
+      try (Response response = httpCall.execute()) {
+        JSObject ret = new JSObject();
+        ret.put("status", response.code());
+        ret.put("text", readBody(response.body()));
+        ret.put("headers", flattenHeaders(response.headers()));
+        call.resolve(ret);
+      }
     } catch (Exception err) {
       call.reject(explain(err));
     }
@@ -111,7 +118,8 @@ public class WebDavPlugin extends Plugin {
 
   private static String explain(Exception err) {
     if (err instanceof UnknownHostException) return "连不上坚果云，请检查网络";
-    if (err instanceof SocketTimeoutException) return "连接超时，请检查网络";
+    // Call.timeout() 到期是 InterruptedIOException，文案与原来的读超时一致。
+    if (err instanceof InterruptedIOException) return "连接超时，请检查网络";
     String msg = err.getMessage();
     if (msg == null || msg.trim().isEmpty()) return "网络请求失败";
     return msg;
