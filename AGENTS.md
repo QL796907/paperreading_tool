@@ -40,11 +40,12 @@
 代理默认 `127.0.0.1:10808`。下 GitHub / Maven 失败先走 `*:proxy`。
 
 - `npm run dev` 网页 + API
+- `npm test`：`node --test` 跑 `shared/syncEngine.test.js`、`shared/webdavProtocol.test.js`、`web/src/nativeStore.test.js`。`web/src/webdavClient.test.js` 要在带 `mock.module` 的 Node 上跑（20.18+ 或 22.3+：`node --experimental-test-module-mocks --test web/src/webdavClient.test.js`），不放进 `npm test`
 - `npm run dist` / `dist:proxy` Windows 安装包
 - `npm run apk` / `apk:proxy` Android APK
 - `npm run plugin:pack` xpi，并重写 `updates/zotero.json`（不改 `updates/android.json`）
 - `npm run android:setup` 同步 web 进 Capacitor（缺 keystore 会停。确认要新建时才设 `GLOSSARY_NEW_KEYSTORE=1`，密码只读 `GLOSSARY_KEYSTORE_PASSWORD`，脚本里没有默认密码）
-- GitHub Actions（`.github/workflows/ci.yml`）：pull request 和 push 到 `main` 时用 Node 20 跑 `npm ci`、`npm run build`。不打 Windows / APK / xpi。锁文件下载地址是 npmmirror，CI 改从 `registry.npmjs.org` 取（`--replace-registry-host=always`），并设 `ELECTRON_SKIP_BINARY_DOWNLOAD=1`。
+- GitHub Actions（`.github/workflows/ci.yml`）：pull request 和 push 到 `main` 时用 Node 20 跑 `npm ci`、`npm test`、`npm run build`。不打 Windows / APK / xpi。锁文件下载地址是 npmmirror，CI 改从 `registry.npmjs.org` 取（`--replace-registry-host=always`），并设 `ELECTRON_SKIP_BINARY_DOWNLOAD=1`。Node 20 不带 `--experimental-test-module-mocks`，`web/src/webdavClient.test.js` 不在 `npm test` 里。
 
 ## 硬规则（ql）
 

@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 
+// mock.module is on Node.js 20.18+ and 22.3+. Start that Node with the flag:
+// node --experimental-test-module-mocks --test web/src/webdavClient.test.js
 if (typeof mock.module !== "function") {
   test(
     "mobile WebDAV hands redirects back",
     {
-      skip: "node --experimental-test-module-mocks --test web/src/webdavClient.test.js",
+      skip: "Node.js 20.18+ or 22.3+ with mock.module: node --experimental-test-module-mocks --test web/src/webdavClient.test.js",
     },
     () => {},
   );
