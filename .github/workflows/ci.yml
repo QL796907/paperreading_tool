@@ -32,3 +32,8 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # Suites that execute on this job's Node 20. webdavClient.test.js
+      # needs mock.module and is not part of npm test.
+      - name: Test
+        run: npm test
