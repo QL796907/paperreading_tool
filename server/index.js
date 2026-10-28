@@ -6,6 +6,10 @@ import { store } from "./store.js";
 import { explainTerm } from "./ai.js";
 import { createTermWithAutoExplain } from "../shared/createTermFlow.js";
 import {
+  MISSING_TERM_MESSAGE,
+  writeAiDefinition,
+} from "../shared/writeAiDefinition.js";
+import {
   getSyncStatus,
   queuePush,
   setSyncListener,
@@ -83,20 +87,21 @@ app.delete("/api/terms/:id", asyncHandler(async (req, res) => {
 }));
 
 app.post("/api/terms/:id/explain", asyncHandler(async (req, res) => {
-  const term = await store.getTerm(req.params.id);
-  if (!term) {
-    const error = new Error("找不到这个词条");
-    error.status = 404;
-    throw error;
+  let updated;
+  try {
+    updated = await writeAiDefinition({
+      id: req.params.id,
+      withLock,
+      store,
+      explainTerm,
+    });
+  } catch (err) {
+    // helper 抛出的「找不到这个词条」不带 status。404 只补在这。
+    if (err.status == null && err.message === MISSING_TERM_MESSAGE) {
+      err.status = 404;
+    }
+    throw err;
   }
-  const settings = await store.getSettings();
-  const definition = await explainTerm(term, settings);
-  const updated = await withLock(() =>
-    store.updateTerm(term.id, {
-      definition,
-      definitionSource: "ai",
-    }),
-  );
   broadcast({ type: "changed", id: updated.id });
   queuePush("local-change");
   res.json({ term: updated });

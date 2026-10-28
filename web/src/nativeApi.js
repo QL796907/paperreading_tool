@@ -1,6 +1,7 @@
 import { nativeStore } from "./nativeStore.js";
 import { explainTerm as runExplain } from "./nativeAi.js";
 import { createTermWithAutoExplain } from "../../shared/createTermFlow.js";
+import { writeAiDefinition } from "../../shared/writeAiDefinition.js";
 import {
   getSyncStatus,
   queuePush,
@@ -52,18 +53,14 @@ export const nativeApi = {
   },
 
   async explainTerm(id) {
-    const term = await nativeStore.getTerm(id);
-    if (!term) throw new Error("找不到这个词条");
-    const settings = await nativeStore.getSettings();
-    const definition = await runExplain(term, settings);
-    const updated = await withLock(() =>
-      nativeStore.updateTerm(id, {
-        definition,
-        definitionSource: "ai",
-      }),
-    );
+    const term = await writeAiDefinition({
+      id,
+      withLock,
+      store: nativeStore,
+      explainTerm: runExplain,
+    });
     queuePush("local-change");
-    return { term: updated };
+    return { term };
   },
 
   async saveSettings(body) {
