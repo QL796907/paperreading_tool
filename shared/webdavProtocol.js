@@ -185,6 +185,30 @@ export function createDavClient(request) {
     }
   }
 
+  async function parentFolderExists({ url, user, password, remotePath }) {
+    const parts = String(remotePath || "")
+      .replace(/^\/+/, "")
+      .split("/")
+      .filter(Boolean);
+    parts.pop();
+    if (!parts.length) return true;
+    const href = collectionUrl(url, parts.join("/"));
+    const probe = await call({
+      method: "PROPFIND",
+      url: href,
+      user,
+      password,
+      headers: {
+        Depth: "0",
+        "Content-Type": "application/xml; charset=utf-8",
+      },
+      body: PROPFIND_BODY,
+    });
+    const authErr = mapAuthError(probe.status);
+    if (authErr) throw authErr;
+    return [200, 207].includes(probe.status);
+  }
+
   async function downloadTerms({ url, user, password, remotePath }) {
     const href = joinDavUrl(url, remotePath);
     const res = await call({
@@ -196,6 +220,16 @@ export function createDavClient(request) {
     const authErr = mapAuthError(res.status);
     if (authErr) throw authErr;
     if (res.status === 404) return null;
+    // 坚果云在上一级文件夹还不存在时，GET 文件回 409，不是 404。
+    // 这和「远程还没有术语本」一样，交给上传去建目录。
+    if (res.status === 409) {
+      const exists = await parentFolderExists({ url, user, password, remotePath });
+      if (!exists) return null;
+      throw fail(
+        "下载术语本失败（网盘返回 409）。上一级文件夹是在的，请确认远程路径指向的是文件，不是文件夹",
+        502,
+      );
+    }
     if (res.status !== 200) {
       throw fail(`下载术语本失败（网盘返回 ${res.status}）`, 502);
     }

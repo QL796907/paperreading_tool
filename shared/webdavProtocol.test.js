@@ -70,6 +70,43 @@ test("relative Location stays on the same host and keeps PUT body", async () => 
   assert.equal(puts[1].url, "https://dav.example/dav/paper-glossary/terms.json?final=1");
 });
 
+test("GET 409 with a missing parent is an empty remote glossary", async () => {
+  const { request, seen } = scripted((options) => {
+    if (options.method === "GET") return { status: 409, text: "" };
+    if (options.method === "PROPFIND") return { status: 404, text: "" };
+    throw new Error(`unexpected ${options.method}`);
+  });
+  const { downloadTerms } = createDavClient(request);
+  const remote = await downloadTerms(creds);
+  assert.equal(remote, null);
+  assert.deepEqual(
+    seen.map((item) => `${item.method} ${item.url}`),
+    [
+      "GET https://dav.example/dav/paper-glossary/terms.json",
+      "PROPFIND https://dav.example/dav/paper-glossary/",
+    ],
+  );
+});
+
+test("GET 409 when probing the missing parent also returns 409 is still empty", async () => {
+  const { request } = scripted(() => ({ status: 409, text: "" }));
+  const { downloadTerms } = createDavClient(request);
+  assert.equal(await downloadTerms(creds), null);
+});
+
+test("GET 409 when the parent folder exists still fails", async () => {
+  const { request } = scripted((options) => {
+    if (options.method === "GET") return { status: 409, text: "" };
+    if (options.method === "PROPFIND") return { status: 207, text: "<multistatus/>" };
+    throw new Error(`unexpected ${options.method}`);
+  });
+  const { downloadTerms } = createDavClient(request);
+  await assert.rejects(
+    () => downloadTerms(creds),
+    (err) => /指向的是文件/.test(err.message),
+  );
+});
+
 test("409 plus PROPFIND 207 means the folder already exists", async () => {
   const { request, seen } = scripted((options) => {
     if (options.method === "MKCOL") return { status: 409, text: "" };
