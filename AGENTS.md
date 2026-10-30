@@ -18,7 +18,7 @@
 
 应用图标以 ql 敲定的 Grokbot 示例为准：奶油圆角方印、森林绿双线框、立着的墨色书、封面是掀起的折线（不是词条横杠、也不是盖在书上的黑块）、朱红角点在右上。电脑、手机、启动页同一套，由 `scripts/make-icons.js` 出图。启动图层 `<bitmap>` 用各密度 `drawable-*/splash_icon.png`（真位图）；`@mipmap/ic_launcher` 在 API 26+ 是自适应图标 XML，不能放进 `<bitmap>`，但可以当作 `windowSplashScreenAnimatedIcon`。`AppTheme.NoActionBarLaunch` 还要写 `windowSplashScreenBackground`、`windowSplashScreenAnimatedIcon`、`postSplashScreenTheme`。`postSplashScreenTheme` 指向 `AppTheme.NoActionBar`（`Theme.AppCompat.Light.NoActionBar`），不要指回带 ActionBar 的 `AppTheme`。`mainActivitySource` 在 `super.onCreate` 之前调用 `SplashScreen.installSplashScreen(this)`，这项才会生效。`drawable/splash.xml` 的 bitmap 启动图保留。`android:setup` 会覆盖 Capacitor 默认蓝标。奶油底色只留 `values/ic_launcher_background.xml` 里的 `@color/ic_launcher_background`。`make-icons.js` 不再写 `drawable/ic_launcher_background.xml`，再跑时会删掉残留的 shape。不要再手改各密度 PNG。
 
-当前对外版本是 **`1.0.6` / `versionCode` 7**（2026-10-30：术语本进程没开时，Zotero 划词仍写入 `%APPDATA%\\术语本\\terms.json`）。日常改功能不要 bump；只有 ql 说发版才改。下次发版：`1.0.6` → `1.0.7`，`versionCode` 7 → 8。
+当前对外版本是 **`1.0.7` / `versionCode` 8**（2026-10-30：标题栏回到选定的 B 色、坚果云还没有术语本文件夹时不再把 409 当成下载失败、设置里可测试 AI 接口）。日常改功能不要 bump；只有 ql 说发版才改。下次发版：`1.0.7` → `1.0.8`，`versionCode` 8 → 9。
 
 ## 目录
 
