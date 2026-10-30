@@ -1,4 +1,5 @@
 import { explainTerm as explain } from "../shared/explainTerm.js";
+import { testAiConnection as testAi } from "../shared/testAiConnection.js";
 
 async function postChat({ url, headers, body, timeoutMs }) {
   const controller = new AbortController();
@@ -19,4 +20,8 @@ async function postChat({ url, headers, body, timeoutMs }) {
 
 export function explainTerm(term, settings) {
   return explain(term, settings, postChat);
+}
+
+export function testAiConnection(body, settings) {
+  return testAi(body, settings, postChat);
 }

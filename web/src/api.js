@@ -53,6 +53,12 @@ const httpApi = {
       headers,
       body: JSON.stringify(body || {}),
     }),
+  testAi: (body) =>
+    request("/api/ai/test", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body || {}),
+    }),
   syncNow: () => request("/api/sync/now", { method: "POST" }),
 };
 

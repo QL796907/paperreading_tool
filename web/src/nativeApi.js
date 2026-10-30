@@ -1,5 +1,5 @@
 import { nativeStore } from "./nativeStore.js";
-import { explainTerm as runExplain } from "./nativeAi.js";
+import { explainTerm as runExplain, testAiConnection } from "./nativeAi.js";
 import { createTermWithAutoExplain } from "../../shared/createTermFlow.js";
 import { writeAiDefinition } from "../../shared/writeAiDefinition.js";
 import {
@@ -71,5 +71,11 @@ export const nativeApi = {
 
   // 口令整理在 syncEngine.normalizeTestCredentials，和电脑 POST /api/sync/test 同一套。
   testSync: (body) => testConnection(body || {}),
+
+  // 密钥整理在 testAiConnection，和电脑 POST /api/ai/test 同一套。
+  async testAi(body) {
+    const settings = await nativeStore.getSettings();
+    return testAiConnection(body || {}, settings);
+  },
   syncNow: () => syncNow("manual"),
 };

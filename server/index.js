@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { store } from "./store.js";
-import { explainTerm } from "./ai.js";
+import { explainTerm, testAiConnection } from "./ai.js";
 import { createTermWithAutoExplain } from "../shared/createTermFlow.js";
 import {
   MISSING_TERM_MESSAGE,
@@ -116,6 +116,12 @@ app.put("/api/settings", asyncHandler(async (req, res) => {
 
 app.post("/api/sync/test", asyncHandler(async (req, res) => {
   const result = await testConnection(req.body || {});
+  res.json(result);
+}));
+
+app.post("/api/ai/test", asyncHandler(async (req, res) => {
+  const settings = await store.getSettings();
+  const result = await testAiConnection(req.body || {}, settings);
   res.json(result);
 }));
 

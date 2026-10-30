@@ -124,11 +124,15 @@ export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
   const [draft, setDraft] = useState(settings);
   const [busy, setBusy] = useState(false);
   const [testBusy, setTestBusy] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
   const [syncBusy, setSyncBusy] = useState(false);
   const [updateBusy, setUpdateBusy] = useState(false);
   const [error, setError] = useState("");
+  const [aiError, setAiError] = useState("");
+  const [aiNote, setAiNote] = useState("");
   const [davError, setDavError] = useState("");
   const [note, setNote] = useState(sync?.lastMessage || "");
+  const aiFeedbackRef = useRef(null);
   const davFeedbackRef = useRef(null);
   const [updateNote, setUpdateNote] = useState("");
   const [showKey, setShowKey] = useState(false);
@@ -139,6 +143,11 @@ export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
   function setField(key, value) {
     setDraft((prev) => ({ ...prev, [key]: value }));
   }
+
+  useEffect(() => {
+    if (!aiError && !aiNote) return;
+    aiFeedbackRef.current?.scrollIntoView({ block: "nearest" });
+  }, [aiError, aiNote]);
 
   useEffect(() => {
     if (!davError && !note) return;
@@ -155,6 +164,25 @@ export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
     } catch (err) {
       setError(err.message);
       setBusy(false);
+    }
+  }
+
+  async function testAi() {
+    setAiBusy(true);
+    setError("");
+    setAiError("");
+    setAiNote("");
+    try {
+      const data = await api.testAi({
+        apiBaseUrl: draft.apiBaseUrl,
+        apiKey: draft.apiKey,
+        model: draft.model,
+      });
+      setAiNote(data.message || "连接成功");
+    } catch (err) {
+      setAiError(err.message || "测试失败");
+    } finally {
+      setAiBusy(false);
     }
   }
 
@@ -258,6 +286,16 @@ export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
             placeholder="deepseek-chat"
           />
         </label>
+        <div className="sync-actions">
+          <button type="button" className="ghost" onClick={testAi} disabled={aiBusy || busy}>
+            {aiBusy ? "测试中…" : "测试连接"}
+          </button>
+        </div>
+        {aiError || aiNote ? (
+          <p ref={aiFeedbackRef} className={aiError ? "field-error" : "sync-note"}>
+            {aiError || aiNote}
+          </p>
+        ) : null}
         <label>
           系统提示词
           <textarea

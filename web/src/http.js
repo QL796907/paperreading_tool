@@ -31,7 +31,8 @@ function readableNetworkError(err) {
   return msg || "网络请求失败";
 }
 
-// 超时在这里标成 AbortError。文案保持坚果云那句；模型超时的句子只在 explainTerm 里换。
+// 超时在这里标成 AbortError。文案保持「连接超时，请检查网络」；
+// 模型超时的句子只在 explainTerm 和 testAiConnection 里换成「模型请求超时，请稍后重试」。
 function isNetworkTimeout(err) {
   if (!err) return false;
   if (err.name === "AbortError" || err.status === 504) return true;
