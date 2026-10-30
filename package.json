@@ -15,7 +15,7 @@
     "dev:server": "node --watch server/index.js",
     "dev:web": "vite --config web/vite.config.js",
     "build": "vite build --config web/vite.config.js",
-    "test": "node --test shared/explainBudget.test.js shared/syncEngine.test.js shared/webdavProtocol.test.js web/src/nativeStore.test.js",
+    "test": "node --test shared/explainBudget.test.js shared/syncEngine.test.js shared/webdavProtocol.test.js web/src/nativeStore.test.js zotero-plugin/offlineTerms.test.js",
     "start": "node server/index.js",
     "plugin:pack": "node scripts/pack-plugin.js",
     "icons": "node scripts/make-icons.js",

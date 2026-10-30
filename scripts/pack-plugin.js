@@ -15,7 +15,7 @@ const pkg = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"
 async function addDir(zip, dir, prefix = "") {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   for (const entry of entries) {
-    if (entry.name.endsWith(".xpi") || entry.name.startsWith(".")) continue;
+    if (entry.name.endsWith(".xpi") || entry.name.startsWith(".") || entry.name.endsWith(".test.js")) continue;
     const full = path.join(dir, entry.name);
     const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
     if (entry.isDirectory()) await addDir(zip, full, rel);

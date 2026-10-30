@@ -288,16 +288,22 @@ PaperGlossary = {
     }
     let xhr;
     try {
-      xhr = await Zotero.HTTP.request("POST", url, {
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        timeout,
-        successCodes: [200, 201],
-      });
+      xhr = await this.postTerm(url, body, timeout);
     } catch (err) {
       // successCodes also rejects 4xx/5xx, which still carry {error}.
-      // No response body means the local app never answered.
-      throw new Error(this.apiErrorMessage(err));
+      // No response body means nothing is listening on this same URL.
+      if (
+        typeof PaperGlossaryOffline === "undefined" ||
+        !PaperGlossaryOffline.isUnreachable(err)
+      ) {
+        throw new Error(this.apiErrorMessage(err));
+      }
+      const saved = await this.writeTermsFile(body);
+      this.notify(
+        saved.created ? "已写入术语本" : "术语本里已有此词，已补上来源",
+        `${saved.term.word || word}。下次打开术语本就能看到，自动解析也要等那时再做。`,
+      );
+      return { term: saved.term, created: saved.created, offline: true };
     }
     const data = JSON.parse(xhr.responseText || "{}");
     if (data.error) throw new Error(data.error);
@@ -307,6 +313,68 @@ PaperGlossary = {
       term.word || word,
     );
     return data;
+  },
+
+  postTerm(url, body, timeout) {
+    return Zotero.HTTP.request("POST", url, {
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      timeout,
+      successCodes: [200, 201],
+    });
+  },
+
+  writeTermsFile(body) {
+    const run = this._offlineWrite || Promise.resolve();
+    const next = run.then(
+      () => this.writeTermsFileNow(body),
+      () => this.writeTermsFileNow(body),
+    );
+    this._offlineWrite = next;
+    return next;
+  },
+
+  async writeTermsFileNow(body) {
+    const roaming = this.windowsRoamingDir();
+    if (!roaming || typeof PaperGlossaryOffline === "undefined" || typeof IOUtils === "undefined") {
+      throw new Error("连不上本地服务，确认术语本已打开");
+    }
+    const file = PaperGlossaryOffline.termsPath(roaming);
+    const dir = file.slice(0, file.lastIndexOf("\\"));
+    await IOUtils.makeDirectory(dir, { ignoreExisting: true });
+    let raw = "";
+    try {
+      raw = await IOUtils.readUTF8(file);
+    } catch (err) {
+      if (!this.isMissingFile(err)) {
+        throw new Error("读不到术语本的词条文件，没有写入：" + (err.message || err));
+      }
+    }
+    const saved = PaperGlossaryOffline.apply(raw, body);
+    try {
+      await IOUtils.writeUTF8(file, saved.text, { tmpPath: `${file}.tmp` });
+    } catch (err) {
+      throw new Error("词条没能写入术语本：" + (err.message || err));
+    }
+    return saved;
+  },
+
+  windowsRoamingDir() {
+    try {
+      if (typeof Services === "undefined" || !Services.dirsvc || !Services.appinfo) return "";
+      if (Services.appinfo.OS !== "WINNT") return "";
+      return Services.dirsvc.get("AppData", Ci.nsIFile).path;
+    } catch (err) {
+      return "";
+    }
+  },
+
+  isMissingFile(err) {
+    const name = err && err.name;
+    if (name === "NotFoundError") return true;
+    return /NS_ERROR_FILE_NOT_FOUND|NotFoundError|does not exist/i.test(
+      String((err && err.message) || err || ""),
+    );
   },
 
   apiErrorMessage(err) {

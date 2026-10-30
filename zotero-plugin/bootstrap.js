@@ -9,6 +9,7 @@ function install() {}
 async function startup({ id, version, rootURI }) {
   log("startup");
   Services.scriptloader.loadSubScript(rootURI + "explainBudget.js");
+  Services.scriptloader.loadSubScript(rootURI + "offlineTerms.js");
   Services.scriptloader.loadSubScript(rootURI + "glossary.js");
   PaperGlossary.init({ id, version, rootURI });
 }
