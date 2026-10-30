@@ -118,7 +118,7 @@ function createWindow() {
     show: false,
     frame: !windowsShell,
     thickFrame: true,
-    backgroundColor: "#2c241c",
+    backgroundColor: "#dfd3bc",
     autoHideMenuBar: true,
     icon: iconPath("icon.ico"),
     webPreferences,
