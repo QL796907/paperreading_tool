@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "./api.js";
 import { isAndroidApp, isNativeApp } from "./platform.js";
 import { checkAppUpdate } from "./apkUpdate.js";
 import { setNativeSyncListener } from "./nativeSync.js";
 import TermCard from "./TermCard.jsx";
 import VirtualList from "./VirtualList.jsx";
-import ReadingMode from "./ReadingMode.jsx";
 import WindowControls from "./WindowControls.jsx";
 import DesktopUpdateBar from "./DesktopUpdateBar.jsx";
 import {
@@ -22,6 +21,8 @@ import {
   monthLabel,
   matchesQuery,
 } from "./dates.js";
+
+const ReadingMode = lazy(() => import("./ReadingMode.jsx"));
 
 export default function App() {
   const [terms, setTerms] = useState([]);
@@ -490,17 +491,33 @@ export default function App() {
       <WindowControls />
       <DesktopUpdateBar />
       {reading ? (
-        <ReadingMode
+        <ReadingBoundary
+          date={activeDate}
           terms={terms}
-          startDate={activeDate}
           onExit={() => setReading(false)}
-          onDateChange={setActiveDate}
-          onChanged={(next) => {
-            setTerms((prev) => prev.map((item) => (item.id === next.id ? next : item)));
-          }}
-          onRequestDelete={setPendingDelete}
-          onToast={setToast}
-        />
+        >
+          <Suspense
+            fallback={
+              <ReadingPlaceholder
+                date={activeDate}
+                terms={terms}
+                onExit={() => setReading(false)}
+              />
+            }
+          >
+            <ReadingMode
+              terms={terms}
+              startDate={activeDate}
+              onExit={() => setReading(false)}
+              onDateChange={setActiveDate}
+              onChanged={(next) => {
+                setTerms((prev) => prev.map((item) => (item.id === next.id ? next : item)));
+              }}
+              onRequestDelete={setPendingDelete}
+              onToast={setToast}
+            />
+          </Suspense>
+        </ReadingBoundary>
       ) : (
         desk
       )}
@@ -521,6 +538,60 @@ export default function App() {
       <Toast message={toast} onRetry={toastRetry} />
     </>
   );
+}
+
+function ReadingPlaceholder({ date, terms, onExit, failed = false }) {
+  const dayTerms = terms.filter((term) => term.noteDate === date);
+  const hand = dayTerms.filter((term) => term.definitionSource === "manual").length;
+  const ai = dayTerms.filter((term) => term.definitionSource === "ai").length;
+  return (
+    <div className="desk reading-desk" aria-busy={failed ? undefined : "true"}>
+      <header className="reader-bar">
+        <button type="button" className="text-btn" onClick={onExit}>
+          返回
+        </button>
+        <h1>{formatBigDate(date)}</h1>
+        <button type="button" className="text-btn page-num" tabIndex={-1}>
+          1 / 1
+        </button>
+      </header>
+      <article className="reader-paper">
+        {failed ? (
+          <p className="muted">这一页没有打开，返回后再试一次。</p>
+        ) : null}
+      </article>
+      {dayTerms.length ? (
+        <p className="reader-foot">
+          共 {dayTerms.length} 词 · 手写 {hand} · AI {ai}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+class ReadingBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { failed: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) {
+      return (
+        <ReadingPlaceholder
+          date={this.props.date}
+          terms={this.props.terms}
+          onExit={this.props.onExit}
+          failed
+        />
+      );
+    }
+    return this.props.children;
+  }
 }
 
 function patchTermById(terms, term) {
