@@ -40,7 +40,7 @@
 代理默认 `127.0.0.1:10808`。下 GitHub / Maven 失败先走 `*:proxy`。
 
 - `npm run dev` 网页 + API
-- `npm test`：`node --test` 跑 `shared/explainBudget.test.js`、`shared/testAiConnection.test.js`、`shared/syncEngine.test.js`、`shared/webdavProtocol.test.js`、`web/src/nativeStore.test.js`、`web/src/windowList.test.js`、`web/src/readingPages.test.js`、`zotero-plugin/offlineTerms.test.js`。`web/src/webdavClient.test.js` 要在带 `mock.module` 的 Node 上跑（20.18+ 或 22.3+：`node --experimental-test-module-mocks --test web/src/webdavClient.test.js`），不放进 `npm test`
+- `npm test`：`node --test` 跑 `shared/explainBudget.test.js`、`shared/testAiConnection.test.js`、`shared/syncEngine.test.js`、`shared/webdavProtocol.test.js`、`shared/writeAiDefinition.test.js`、`scripts/setup-android.test.js`、`web/src/nativeStore.test.js`、`web/src/windowList.test.js`、`web/src/readingPages.test.js`、`zotero-plugin/offlineTerms.test.js`。`web/src/webdavClient.test.js` 要在带 `mock.module` 的 Node 上跑（20.18+ 或 22.3+：`node --experimental-test-module-mocks --test web/src/webdavClient.test.js`），不放进 `npm test`
 - `npm run dist` / `dist:proxy` Windows 安装包
 - `npm run apk` / `apk:proxy` Android APK
 - `npm run plugin:pack` xpi，并重写 `updates/zotero.json`（不改 `updates/android.json`）
