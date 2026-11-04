@@ -127,9 +127,26 @@ function keystorePassword() {
   return password;
 }
 
+const optSigningDir = "/opt/glossary-signing";
+
+function restoreSigningMaterial() {
+  const pairs = [
+    ["glossary.keystore", path.join(androidDir, "glossary.keystore")],
+    ["keystore.properties", path.join(androidDir, "keystore.properties")],
+  ];
+  for (const [name, dest] of pairs) {
+    const src = path.join(optSigningDir, name);
+    if (!fs.existsSync(dest) && fs.existsSync(src)) {
+      fs.copyFileSync(src, dest);
+      fs.chmodSync(dest, 0o600);
+    }
+  }
+}
+
 function ensureKeystore() {
   const propsPath = path.join(androidDir, "keystore.properties");
   const storePath = path.join(androidDir, "glossary.keystore");
+  restoreSigningMaterial();
   let password = "";
   if (!fs.existsSync(storePath)) {
     console.error(`
@@ -276,11 +293,14 @@ systemProp.https.proxyPort=${port}
 }
 
 function writeLocalProperties() {
-  const sdk =
-    process.env.ANDROID_HOME ||
-    process.env.ANDROID_SDK_ROOT ||
-    path.join(process.env.LOCALAPPDATA || "", "Android", "Sdk");
-  if (!sdk || !fs.existsSync(sdk)) return;
+  const candidates = [
+    process.env.ANDROID_HOME,
+    process.env.ANDROID_SDK_ROOT,
+    "/opt/android-sdk",
+    path.join(process.env.LOCALAPPDATA || "", "Android", "Sdk"),
+  ];
+  const sdk = candidates.find((dir) => dir && fs.existsSync(dir));
+  if (!sdk) return;
   const escaped = sdk.replace(/\\/g, "\\\\");
   fs.writeFileSync(
     path.join(androidDir, "local.properties"),
