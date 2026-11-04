@@ -3,6 +3,13 @@ import TermCard from "./TermCard.jsx";
 import { EmptyState } from "./overlays.jsx";
 import { formatBigDate } from "./dates.js";
 import { isAndroidApp } from "./platform.js";
+import {
+  READING_CARD_GAP,
+  READING_PROBE_LIMIT,
+  packTermPages,
+  sameIdPages,
+  termMeasureKey,
+} from "./readingPages.js";
 
 function reducedMotion() {
   return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -19,7 +26,9 @@ export default function ReadingMode({
 }) {
   const [date, setDate] = useState(startDate);
   const [pageIndex, setPageIndex] = useState(0);
-  const [pages, setPages] = useState([[]]);
+  const [pageIds, setPageIds] = useState([[]]);
+  const [probeIds, setProbeIds] = useState([]);
+  const [measuredPass, setMeasuredPass] = useState(0);
   const [dir, setDir] = useState("none");
   const [showIndex, setShowIndex] = useState(false);
   const [edge, setEdge] = useState("");
@@ -32,6 +41,8 @@ export default function ReadingMode({
   }, []);
   const paperRef = useRef(null);
   const measureRef = useRef(null);
+  const measuredRef = useRef(new Map());
+  const viewportRef = useRef(viewport);
   const pointer = useRef(null);
   const wantLast = useRef(false);
   const toastedEdge = useRef({ start: false, end: false });
@@ -56,68 +67,73 @@ export default function ReadingMode({
     const measure = measureRef.current;
     if (!paper || !measure) return;
 
+    if (viewportRef.current !== viewport) {
+      viewportRef.current = viewport;
+      measuredRef.current.clear();
+    }
+
     const style = window.getComputedStyle(paper);
     const available = Math.max(
       120,
       paper.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom),
     );
-    const nodes = [...measure.querySelectorAll("[data-term]")];
-    if (!nodes.length) {
-      setPages([[]]);
-      setPageIndex(0);
-      return;
-    }
 
-    const packed = [];
-    let current = [];
-    let used = 0;
-    const gap = 14;
-
-    for (const node of nodes) {
-      const h = node.getBoundingClientRect().height;
+    let learned = false;
+    for (const node of measure.querySelectorAll("[data-term]")) {
       const id = node.getAttribute("data-term");
-      if (!current.length) {
-        current = [id];
-        used = h;
-        if (h > available) {
-          packed.push(current);
-          current = [];
-          used = 0;
-        }
-        continue;
-      }
-      if (used + gap + h > available) {
-        packed.push(current);
-        current = [id];
-        used = h;
-      } else {
-        current.push(id);
-        used += gap + h;
+      const term = dayTerms.find((item) => item.id === id);
+      if (!term) continue;
+      const key = termMeasureKey(term);
+      const height = node.getBoundingClientRect().height;
+      const prev = measuredRef.current.get(key);
+      if (prev == null || Math.abs(prev - height) >= 0.5) {
+        measuredRef.current.set(key, height);
+        learned = true;
       }
     }
-    if (current.length) packed.push(current);
 
-    const mapped = packed.map((ids) =>
-      ids.map((id) => dayTerms.find((t) => t.id === id)).filter(Boolean),
-    );
-    const nextPages = mapped.length ? mapped : [[]];
-    setPages(nextPages);
-    setPageIndex((i) => {
+    const known = [...measuredRef.current.values()];
+    const average = known.length
+      ? known.reduce((sum, height) => sum + height, 0) / known.length
+      : 160;
+    const sized = dayTerms.map((term) => ({
+      id: term.id,
+      height: measuredRef.current.get(termMeasureKey(term)) ?? average,
+    }));
+    const packed = dayTerms.length ? packTermPages(sized, available, READING_CARD_GAP) : [[]];
+    setPageIds((prev) => (sameIdPages(prev, packed) ? prev : packed));
+    setPageIndex((current) => {
+      const last = Math.max(0, packed.length - 1);
       if (wantLast.current) {
-        wantLast.current = false;
-        return Math.max(0, nextPages.length - 1);
+        const allKnown = dayTerms.every((term) => measuredRef.current.has(termMeasureKey(term)));
+        if (allKnown) wantLast.current = false;
+        return last;
       }
-      return Math.min(i, Math.max(0, nextPages.length - 1));
+      return Math.min(current, last);
     });
-  }, [dayTerms, viewport]);
+
+    const probe = [];
+    for (const term of dayTerms) {
+      if (probe.length >= READING_PROBE_LIMIT) break;
+      if (measuredRef.current.has(termMeasureKey(term))) continue;
+      probe.push(term.id);
+    }
+    setProbeIds((prev) => (prev.length === probe.length && prev.every((id, i) => id === probe[i]) ? prev : probe));
+    if (learned) setMeasuredPass((value) => value + 1);
+  }, [dayTerms, viewport, measuredPass, probeIds]);
 
   useEffect(() => {
     onDateChange?.(date);
   }, [date, onDateChange]);
 
-  const pageCount = Math.max(1, pages.length);
+  const pageCount = Math.max(1, pageIds.length);
   const safeIndex = Math.min(pageIndex, pageCount - 1);
-  const pageTerms = pages[safeIndex] || [];
+  const pageTerms = (pageIds[safeIndex] || [])
+    .map((id) => dayTerms.find((term) => term.id === id))
+    .filter(Boolean);
+  const probeTerms = probeIds
+    .map((id) => dayTerms.find((term) => term.id === id))
+    .filter(Boolean);
 
   function goToDate(nextDate, nextPage) {
     setDate(nextDate);
@@ -228,7 +244,7 @@ export default function ReadingMode({
 
       {showIndex ? (
         <div className="page-picker" onClick={(e) => e.stopPropagation()}>
-          {pages.map((_, i) => (
+          {pageIds.map((_, i) => (
             <button
               key={i}
               type="button"
@@ -301,7 +317,7 @@ export default function ReadingMode({
       ) : null}
 
       <div className="measure-sheet" ref={measureRef} aria-hidden="true">
-        {dayTerms.map((term) => (
+        {probeTerms.map((term) => (
           <TermCard key={term.id} term={term} reading measure />
         ))}
       </div>

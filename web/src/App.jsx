@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "./api.js";
 import { isAndroidApp, isNativeApp } from "./platform.js";
 import { checkAppUpdate } from "./apkUpdate.js";
 import { setNativeSyncListener } from "./nativeSync.js";
 import TermCard from "./TermCard.jsx";
+import VirtualList from "./VirtualList.jsx";
 import ReadingMode from "./ReadingMode.jsx";
 import WindowControls from "./WindowControls.jsx";
 import DesktopUpdateBar from "./DesktopUpdateBar.jsx";
@@ -37,6 +38,9 @@ export default function App() {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [reading, setReading] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  const [focusDate, setFocusDate] = useState("");
+  const pageRef = useRef(null);
+  const datesRef = useRef(null);
 
   const searching = Boolean(query.trim());
 
@@ -174,6 +178,36 @@ export default function App() {
     return groups;
   }, [dates]);
 
+  const dateRows = useMemo(() => {
+    const rows = [];
+    groupedMonths.forEach((group, index) => {
+      rows.push({
+        type: "month",
+        key: `month:${group.label}`,
+        label: group.label,
+        first: index === 0,
+      });
+      for (const [date, count] of group.items) {
+        rows.push({ type: "date", key: date, date, count });
+      }
+    });
+    return rows;
+  }, [groupedMonths]);
+
+  function onDateKey(ev) {
+    if (ev.key !== "ArrowDown" && ev.key !== "ArrowUp") return;
+    const current = ev.target?.dataset?.date;
+    if (!current) return;
+    const buttons = dateRows.filter((row) => row.type === "date");
+    const index = buttons.findIndex((row) => row.date === current);
+    const next = buttons[index + (ev.key === "ArrowDown" ? 1 : -1)];
+    if (!next) return;
+    ev.preventDefault();
+    setQuery("");
+    setActiveDate(next.date);
+    setFocusDate(next.date);
+  }
+
   const enterReading = useCallback(() => {
     if (searching || showAdd || showSettings || pendingDelete) return;
     setDrawer(false);
@@ -249,40 +283,53 @@ export default function App() {
             <h1>术语本</h1>
             <p className="eyebrow">Paper Glossary</p>
           </div>
-          <nav className="dates" aria-label="按日期浏览">
-            {groupedMonths.map((group) => (
-              <section key={group.label}>
-                <h2>{group.label}</h2>
-                {group.items.map(([date, count]) => (
-                  <button
-                    key={date}
-                    className={date === activeDate && !searching ? "active" : date === activeDate ? "active dim" : ""}
-                    onClick={() => {
+          <nav
+            className="dates"
+            aria-label="按日期浏览"
+            ref={datesRef}
+            onKeyDown={onDateKey}
+          >
+            <VirtualList
+              items={dateRows}
+              getKey={(row) => row.key}
+              estimateSize={(row) => (row.type === "date" ? 36 : row.first ? 28 : 46)}
+              overscan={96}
+              scrollParent={datesRef}
+              scrollToKey={activeDate}
+              focusKey={focusDate}
+              onFocusKey={() => setFocusDate("")}
+              renderItem={(row) => row.type === "month" ? (
+                <h2 className={row.first ? "is-first" : ""}>{row.label}</h2>
+              ) : (
+                <button
+                  data-date={row.date}
+                  tabIndex={row.date === activeDate ? 0 : -1}
+                  className={row.date === activeDate && !searching ? "active" : row.date === activeDate ? "active dim" : ""}
+                  onClick={() => {
+                    setQuery("");
+                    setActiveDate(row.date);
+                    setDrawer(false);
+                  }}
+                  onDoubleClick={() => {
+                    setQuery("");
+                    setActiveDate(row.date);
+                    setDrawer(false);
+                    setReading(true);
+                  }}
+                  onKeyDown={(ev) => {
+                    if (ev.key === "Enter") {
+                      ev.preventDefault();
                       setQuery("");
-                      setActiveDate(date);
-                      setDrawer(false);
-                    }}
-                    onDoubleClick={() => {
-                      setQuery("");
-                      setActiveDate(date);
-                      setDrawer(false);
+                      setActiveDate(row.date);
                       setReading(true);
-                    }}
-                    onKeyDown={(ev) => {
-                      if (ev.key === "Enter") {
-                        ev.preventDefault();
-                        setQuery("");
-                        setActiveDate(date);
-                        setReading(true);
-                      }
-                    }}
-                  >
-                    <span>{formatDirDate(date)}</span>
-                    <em>{count} 词</em>
-                  </button>
-                ))}
-              </section>
-            ))}
+                    }
+                  }}
+                >
+                  <span>{formatDirDate(row.date)}</span>
+                  <em>{row.count} 词</em>
+                </button>
+              )}
+            />
           </nav>
           <p className="index-foot">
             共 {dayCount} 天 · {terms.length} 词
@@ -305,6 +352,7 @@ export default function App() {
 
         <main
           className="page"
+          ref={pageRef}
           onDoubleClick={(ev) => {
             if (ev.target.closest("button, input, textarea, a, .entry, .search")) return;
             enterReading();
@@ -361,10 +409,16 @@ export default function App() {
           {loading ? (
             <p className="muted">正在打开笔记本…</p>
           ) : visibleTerms.length ? (
-            <div className="entries">
-              {visibleTerms.map((term) => (
+            <VirtualList
+              className="entries"
+              items={visibleTerms}
+              getKey={(term) => term.id}
+              estimateSize={() => 148}
+              overscan={280}
+              scrollParent={pageRef}
+              scrollToKey={flashId}
+              renderItem={(term) => (
                 <TermCard
-                  key={term.id}
                   term={term}
                   showDate={searching}
                   flashed={term.id === flashId}
@@ -382,8 +436,8 @@ export default function App() {
                     setFlashId(id);
                   }}
                 />
-              ))}
-            </div>
+              )}
+            />
           ) : (
             <EmptyState
               searching={searching}

@@ -124,7 +124,8 @@ button { cursor: pointer; }
   font-weight: 600;
 }
 
-.dates h2:first-child { margin-top: 0; }
+.dates h2:first-child,
+.dates h2.is-first { margin-top: 0; }
 
 .dates button {
   width: 100%;
