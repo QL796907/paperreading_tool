@@ -67,21 +67,25 @@ app.post("/api/terms", asyncHandler(async (req, res) => {
     store,
     explainTerm,
   });
-  broadcast({ type: "changed", id: result.term.id });
+  broadcast({
+    type: result.created ? "created" : "updated",
+    id: result.term.id,
+    term: result.term,
+  });
   queuePush("local-change");
   res.status(result.created ? 201 : 200).json(result);
 }));
 
 app.patch("/api/terms/:id", asyncHandler(async (req, res) => {
   const term = await withLock(() => store.updateTerm(req.params.id, req.body || {}));
-  broadcast({ type: "changed", id: term.id });
+  broadcast({ type: "updated", id: term.id, term });
   queuePush("local-change");
   res.json({ term });
 }));
 
 app.delete("/api/terms/:id", asyncHandler(async (req, res) => {
   await withLock(() => store.deleteTerm(req.params.id));
-  broadcast({ type: "changed", id: req.params.id });
+  broadcast({ type: "deleted", id: req.params.id });
   queuePush("local-change");
   res.json({ ok: true });
 }));
@@ -102,14 +106,14 @@ app.post("/api/terms/:id/explain", asyncHandler(async (req, res) => {
     }
     throw err;
   }
-  broadcast({ type: "changed", id: updated.id });
+  broadcast({ type: "updated", id: updated.id, term: updated });
   queuePush("local-change");
   res.json({ term: updated });
 }));
 
 app.put("/api/settings", asyncHandler(async (req, res) => {
   const settings = await withLock(() => store.saveSettings(req.body || {}));
-  broadcast({ type: "settings" });
+  broadcast({ type: "settings", settings, sync: getSyncStatus(settings) });
   if (settings.webdavEnabled) queuePush("local-change");
   res.json({ settings, sync: getSyncStatus(settings) });
 }));
@@ -127,6 +131,7 @@ app.post("/api/ai/test", asyncHandler(async (req, res) => {
 
 app.post("/api/sync/now", asyncHandler(async (_req, res) => {
   const result = await syncNow("manual");
+  // 同步没有逐条 diff，远程可能整本替换。客户端见到 type:sync 会整本重载。
   broadcast({ type: "sync" });
   res.json(result);
 }));
@@ -165,6 +170,7 @@ export function startServer() {
   return new Promise((resolve, reject) => {
     const server = app.listen(PORT, "127.0.0.1", () => {
       console.log(`术语本已启动：http://127.0.0.1:${PORT}`);
+      // 同步监听同样只发 type:sync。拉回远程词条时无法安全按 id 打补丁。
       setSyncListener(() => broadcast({ type: "sync" }));
       startSyncLoop();
       httpServer = server;
