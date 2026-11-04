@@ -79,7 +79,16 @@ export default function App() {
   useEffect(() => {
     if (isNativeApp()) return undefined;
     const stream = new EventSource("/api/events");
-    stream.onmessage = () => {
+    stream.onmessage = (event) => {
+      let message;
+      try {
+        message = JSON.parse(event.data);
+      } catch {
+        load().catch(() => {});
+        return;
+      }
+      // 连接一建立服务端就会发 hello。启动时的 load() 已经在拉整本，这里再拉一次是空转。
+      if (message?.type === "hello") return;
       load().catch(() => {});
     };
     return () => stream.close();
