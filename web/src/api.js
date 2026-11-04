@@ -1,5 +1,14 @@
 import { isNativeApp } from "./platform.js";
-import { nativeApi } from "./nativeApi.js";
+
+let nativeApiPromise;
+
+function loadNativeApi() {
+  // 必须留在函数里：写在模块顶上会让桌面首屏也去下载 nativeApi。
+  if (!nativeApiPromise) {
+    nativeApiPromise = import("./nativeApi.js").then((mod) => mod.nativeApi);
+  }
+  return nativeApiPromise;
+}
 
 const headers = { "Content-Type": "application/json" };
 
@@ -64,7 +73,8 @@ const httpApi = {
 
 export const api = new Proxy(httpApi, {
   get(_target, prop) {
-    const backend = isNativeApp() ? nativeApi : httpApi;
-    return backend[prop];
+    if (prop === "then") return undefined;
+    if (!isNativeApp()) return httpApi[prop];
+    return (...args) => loadNativeApi().then((backend) => backend[prop](...args));
   },
 });

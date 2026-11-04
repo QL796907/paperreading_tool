@@ -1,8 +1,6 @@
 import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "./api.js";
 import { isAndroidApp, isNativeApp } from "./platform.js";
-import { checkAppUpdate } from "./apkUpdate.js";
-import { setNativeSyncListener } from "./nativeSync.js";
 import TermCard from "./TermCard.jsx";
 import VirtualList from "./VirtualList.jsx";
 import WindowControls from "./WindowControls.jsx";
@@ -57,17 +55,31 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
-    load()
-      .then((data) => {
+    let clearListener = () => {};
+
+    (async () => {
+      try {
+        if (isAndroidApp()) {
+          const [syncMod] = await Promise.all([
+            import("./nativeSync.js"),
+            import("./nativeApi.js"),
+          ]);
+          if (cancelled) return;
+          syncMod.setNativeSyncListener(() => {
+            load().catch(() => {});
+          });
+          clearListener = () => syncMod.setNativeSyncListener(() => {});
+        }
+        const data = await load();
         if (cancelled || !isAndroidApp() || !data?.settings) return;
-        checkAppUpdate(data.settings)
+        import("./apkUpdate.js")
+          .then((mod) => (cancelled ? null : mod.checkAppUpdate(data.settings)))
           .then((info) => {
-            if (cancelled || !info.newer) return;
+            if (!info || cancelled || !info.newer) return;
             setToast(`有新版本 ${info.latest}，可在设置里下载安装`);
           })
           .catch(() => {});
-      })
-      .catch((err) => {
+      } catch (err) {
         if (cancelled) return;
         setLoading(false);
         setToast(err.message);
@@ -75,9 +87,12 @@ export default function App() {
           setToast("");
           load().catch((e) => setToast(e.message));
         });
-      });
+      }
+    })();
+
     return () => {
       cancelled = true;
+      clearListener();
     };
   }, [load]);
 
@@ -129,14 +144,6 @@ export default function App() {
       load().catch(() => {});
     };
     return () => stream.close();
-  }, [load]);
-
-  useEffect(() => {
-    if (!isAndroidApp()) return undefined;
-    setNativeSyncListener(() => {
-      load().catch(() => {});
-    });
-    return () => setNativeSyncListener(() => {});
   }, [load]);
 
   useEffect(() => {
