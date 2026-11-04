@@ -40,7 +40,7 @@ export function createNativeStore({
       path: tmp,
       directory: Directory.Data,
       encoding: Encoding.UTF8,
-      data: JSON.stringify(value, null, 2),
+      data: JSON.stringify(value),
     });
     // Filesystem.rename 在 Android 上先删目标再 File.renameTo，不是一次替换。
     await replace({ from: tmp, to: name });

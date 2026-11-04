@@ -257,14 +257,10 @@ export function createDavClient(request) {
   async function uploadTerms({ url, user, password, remotePath }, envelope) {
     await ensureParents({ url, user, password, remotePath });
     const href = joinDavUrl(url, remotePath);
-    const body = JSON.stringify(
-      {
-        terms: envelope.terms || [],
-        updatedAt: envelope.updatedAt || new Date().toISOString(),
-      },
-      null,
-      2,
-    );
+    const body = JSON.stringify({
+      terms: envelope.terms || [],
+      updatedAt: envelope.updatedAt || new Date().toISOString(),
+    });
     const res = await call({
       method: "PUT",
       url: href,
