@@ -79,7 +79,48 @@ export default function App() {
   useEffect(() => {
     if (isNativeApp()) return undefined;
     const stream = new EventSource("/api/events");
-    stream.onmessage = () => {
+    stream.onmessage = (event) => {
+      let message;
+      try {
+        message = JSON.parse(event.data);
+      } catch {
+        load().catch(() => {});
+        return;
+      }
+      // 连接一建立服务端就会发 hello。启动时的 load() 已经在拉整本，这里再拉一次是空转。
+      if (message?.type === "hello") return;
+      if (message?.type === "created" || message?.type === "updated") {
+        const term = message.term;
+        if (!message.id || !term || term.id !== message.id) {
+          load().catch(() => {});
+          return;
+        }
+        setTerms((prev) => patchTermById(prev, term));
+        return;
+      }
+      if (message?.type === "deleted") {
+        if (!message.id) {
+          load().catch(() => {});
+          return;
+        }
+        setTerms((prev) => prev.filter((item) => item.id !== message.id));
+        return;
+      }
+      if (message?.type === "settings") {
+        if (!message.settings) {
+          load().catch(() => {});
+          return;
+        }
+        setSettings(message.settings);
+        if (message.sync) setSync(message.sync);
+        return;
+      }
+      // 同步可能整本换成远程词条（增、改、删都有），这条消息没有逐条 diff。
+      // 按 id 打补丁会漏掉远端新增的词，或留下已经被盖掉的词，所以仍整本重载。
+      if (message?.type === "sync") {
+        load().catch(() => {});
+        return;
+      }
       load().catch(() => {});
     };
     return () => stream.close();
@@ -426,6 +467,14 @@ export default function App() {
       <Toast message={toast} onRetry={toastRetry} />
     </>
   );
+}
+
+function patchTermById(terms, term) {
+  const index = terms.findIndex((item) => item.id === term.id);
+  if (index === -1) return [term, ...terms];
+  const next = terms.slice();
+  next[index] = term;
+  return next;
 }
 
 function addedTermToast(data) {

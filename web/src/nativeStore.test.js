@@ -47,11 +47,7 @@ test("saving terms writes a temp file then replaces it in one move", async () =>
   assert.equal(write.encoding, Encoding.UTF8);
   assert.equal(
     write.data,
-    JSON.stringify(
-      { terms: envelope.terms, updatedAt: envelope.updatedAt },
-      null,
-      2,
-    ),
+    JSON.stringify({ terms: envelope.terms, updatedAt: envelope.updatedAt }),
   );
   assert.equal(replace.from, "terms.json.tmp");
   assert.equal(replace.to, "terms.json");

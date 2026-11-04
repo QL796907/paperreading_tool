@@ -30,7 +30,7 @@ async function readJsonFile(file, fallback) {
 async function writeJsonFile(file, value) {
   await ensureDir();
   const tmp = `${file}.${process.pid}.tmp`;
-  await fs.writeFile(tmp, JSON.stringify(value, null, 2), "utf8");
+  await fs.writeFile(tmp, JSON.stringify(value), "utf8");
   await fs.rename(tmp, file);
 }
 
