@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { api } from "./api.js";
-import { APP_VERSION, isAndroidApp, isNativeApp } from "./platform.js";
-import { checkAppUpdate, downloadAndInstall } from "./apkUpdate.js";
-import { GITHUB_MIRROR_DOCS, githubMirrorOn } from "../../electron/githubMirror.js";
+
+const SettingsAiPanel = lazy(() => import("./settingsAiPanel.jsx"));
+const SettingsSyncPanel = lazy(() => import("./settingsSyncPanel.jsx"));
+const SettingsUpdatePanel = lazy(() => import("./settingsUpdatePanel.jsx"));
 
 export function Overlay({ children, onClose, wide }) {
   return (
@@ -123,36 +124,11 @@ export function AddModal({ settings, onClose, onCreated }) {
 export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
   const [draft, setDraft] = useState(settings);
   const [busy, setBusy] = useState(false);
-  const [testBusy, setTestBusy] = useState(false);
-  const [aiBusy, setAiBusy] = useState(false);
-  const [syncBusy, setSyncBusy] = useState(false);
-  const [updateBusy, setUpdateBusy] = useState(false);
   const [error, setError] = useState("");
-  const [aiError, setAiError] = useState("");
-  const [aiNote, setAiNote] = useState("");
-  const [davError, setDavError] = useState("");
-  const [note, setNote] = useState(sync?.lastMessage || "");
-  const aiFeedbackRef = useRef(null);
-  const davFeedbackRef = useRef(null);
-  const [updateNote, setUpdateNote] = useState("");
-  const [showKey, setShowKey] = useState(false);
-  const [showDav, setShowDav] = useState(false);
-  const native = isNativeApp();
-  const android = isAndroidApp();
 
   function setField(key, value) {
     setDraft((prev) => ({ ...prev, [key]: value }));
   }
-
-  useEffect(() => {
-    if (!aiError && !aiNote) return;
-    aiFeedbackRef.current?.scrollIntoView({ block: "nearest" });
-  }, [aiError, aiNote]);
-
-  useEffect(() => {
-    if (!davError && !note) return;
-    davFeedbackRef.current?.scrollIntoView({ block: "nearest" });
-  }, [davError, note]);
 
   async function submit(ev) {
     ev.preventDefault();
@@ -167,268 +143,44 @@ export function SettingsModal({ settings, sync, onClose, onSaved, onToast }) {
     }
   }
 
-  async function testAi() {
-    setAiBusy(true);
-    setError("");
-    setAiError("");
-    setAiNote("");
-    try {
-      const data = await api.testAi({
-        apiBaseUrl: draft.apiBaseUrl,
-        apiKey: draft.apiKey,
-        model: draft.model,
-      });
-      setAiNote(data.message || "连接成功");
-    } catch (err) {
-      setAiError(err.message || "测试失败");
-    } finally {
-      setAiBusy(false);
-    }
-  }
-
-  async function test() {
-    setTestBusy(true);
-    setError("");
-    setDavError("");
-    setNote("");
-    try {
-      const data = await api.testSync({
-        webdavUrl: draft.webdavUrl,
-        webdavUser: draft.webdavUser,
-        webdavPassword: draft.webdavPassword,
-        webdavPath: draft.webdavPath,
-      });
-      setNote(data.message || "连接成功");
-    } catch (err) {
-      setDavError(err.message || "测试失败");
-    } finally {
-      setTestBusy(false);
-    }
-  }
-
-  async function runSync() {
-    setSyncBusy(true);
-    setError("");
-    setDavError("");
-    setNote("");
-    try {
-      await api.saveSettings(draft);
-      const data = await api.syncNow();
-      setNote(data.message || "同步完成");
-    } catch (err) {
-      setDavError(err.message || "同步失败");
-    } finally {
-      setSyncBusy(false);
-    }
-  }
-
-  async function checkUpdate() {
-    setUpdateBusy(true);
-    setError("");
-    setUpdateNote("正在检查…");
-    try {
-      const info = await checkAppUpdate(draft);
-      if (!info.newer) {
-        setUpdateNote(`已经是最新版 ${info.current}`);
-        return;
-      }
-      setUpdateNote(`发现 ${info.latest}，正在下载…`);
-      await downloadAndInstall(info.url, (p) => {
-        if (!p?.total) return;
-        const pct = Math.min(99, Math.round((p.received / p.total) * 100));
-        setUpdateNote(`正在下载 ${info.latest}（${pct}%）`);
-      });
-      setUpdateNote("已开始安装。系统会弹出安装确认。");
-      onToast?.("正在安装新版本");
-    } catch (err) {
-      setError(err.message);
-      setUpdateNote("");
-    } finally {
-      setUpdateBusy(false);
-    }
-  }
-
   return (
     <Overlay onClose={onClose} wide="wide">
       <form className="sheet-form" onSubmit={submit}>
         <h2>设置</h2>
         <p className="hint">连接 OpenAI 兼容接口。密钥只保存在本机，不会上传。</p>
-        <label>
-          API 地址
-          <input
-            className="mono"
-            value={draft.apiBaseUrl}
-            onChange={(e) => setField("apiBaseUrl", e.target.value)}
-            placeholder="https://api.deepseek.com/v1"
+        <Suspense fallback={<p className="hint" aria-busy="true">正在载入接口设置…</p>}>
+          <SettingsAiPanel draft={draft} setField={setField} busy={busy} setError={setError} />
+        </Suspense>
+        <Suspense
+          fallback={
+            <section className="settings-block" aria-busy="true">
+              <h3>坚果云同步</h3>
+            </section>
+          }
+        >
+          <SettingsSyncPanel
+            draft={draft}
+            setField={setField}
+            busy={busy}
+            setError={setError}
+            initialNote={sync?.lastMessage || ""}
           />
-        </label>
-        <label>
-          API Key
-          <span className="key-row">
-            <input
-              className="mono"
-              type={showKey ? "text" : "password"}
-              value={draft.apiKey}
-              onChange={(e) => setField("apiKey", e.target.value)}
-              placeholder="只保存在本机"
-            />
-            <button type="button" className="text-btn" onClick={() => setShowKey((v) => !v)}>
-              {showKey ? "隐藏" : "显示"}
-            </button>
-          </span>
-        </label>
-        <label>
-          模型名
-          <input
-            className="mono"
-            value={draft.model}
-            onChange={(e) => setField("model", e.target.value)}
-            placeholder="deepseek-chat"
+        </Suspense>
+        <Suspense
+          fallback={
+            <section className="settings-block" aria-busy="true">
+              <h3>应用更新</h3>
+            </section>
+          }
+        >
+          <SettingsUpdatePanel
+            draft={draft}
+            setField={setField}
+            busy={busy}
+            setError={setError}
+            onToast={onToast}
           />
-        </label>
-        <div className="sync-actions">
-          <button type="button" className="ghost" onClick={testAi} disabled={aiBusy || busy}>
-            {aiBusy ? "测试中…" : "测试连接"}
-          </button>
-        </div>
-        {aiError || aiNote ? (
-          <p ref={aiFeedbackRef} className={aiError ? "field-error" : "sync-note"}>
-            {aiError || aiNote}
-          </p>
-        ) : null}
-        <label>
-          系统提示词
-          <textarea
-            rows={4}
-            value={draft.systemPrompt}
-            onChange={(e) => setField("systemPrompt", e.target.value)}
-          />
-        </label>
-        {native ? null : (
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={Boolean(draft.autoExplain)}
-              onChange={(e) => setField("autoExplain", e.target.checked)}
-            />
-            Zotero 新词自动解析
-          </label>
-        )}
-
-        <section className="settings-block">
-          <h3>坚果云同步</h3>
-          <p className="hint">
-            只同步术语本，不同步 API Key。在坚果云网页打开「账户信息 → 安全选项」，开通
-            WebDAV，再生成应用密码填到下面。手机和电脑之后都会读写同一个
-            <code>terms.json</code>。
-          </p>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={Boolean(draft.webdavEnabled)}
-              onChange={(e) => setField("webdavEnabled", e.target.checked)}
-            />
-            启用 WebDAV 同步
-          </label>
-          <label>
-            服务器地址
-            <input
-              className="mono"
-              value={draft.webdavUrl || ""}
-              onChange={(e) => setField("webdavUrl", e.target.value)}
-              placeholder="https://dav.jianguoyun.com/dav/"
-              autoComplete="off"
-            />
-          </label>
-          <label>
-            账号
-            <input
-              value={draft.webdavUser || ""}
-              onChange={(e) => setField("webdavUser", e.target.value)}
-              placeholder="坚果云登录邮箱"
-              autoComplete="off"
-            />
-          </label>
-          <label>
-            应用密码
-            <span className="key-row">
-              <input
-                className="mono"
-                type={showDav ? "text" : "password"}
-                value={draft.webdavPassword || ""}
-                onChange={(e) => setField("webdavPassword", e.target.value)}
-                placeholder="不是登录密码"
-                autoComplete="new-password"
-              />
-              <button type="button" className="text-btn" onClick={() => setShowDav((v) => !v)}>
-                {showDav ? "隐藏" : "显示"}
-              </button>
-            </span>
-          </label>
-          <label>
-            远程文件路径
-            <input
-              className="mono"
-              value={draft.webdavPath || ""}
-              onChange={(e) => setField("webdavPath", e.target.value)}
-              placeholder="paper-glossary/terms.json"
-            />
-          </label>
-          <div className="sync-actions">
-            <button type="button" className="ghost" onClick={test} disabled={testBusy || busy}>
-              {testBusy ? "测试中…" : "测试连接"}
-            </button>
-            <button type="button" className="ghost" onClick={runSync} disabled={syncBusy || busy}>
-              {syncBusy ? "同步中…" : "立即同步"}
-            </button>
-          </div>
-          {davError || note ? (
-            <p ref={davFeedbackRef} className={davError ? "field-error" : "sync-note"}>
-              {davError || note}
-            </p>
-          ) : null}
-        </section>
-
-        <section className="settings-block">
-          <h3>应用更新</h3>
-          <p className="hint">
-            当前版本 {APP_VERSION}。安装包从 GitHub Releases 下载。
-            {android
-              ? " 手机点下面检查并安装。Zotero 插件不走这里，它在 Zotero 的「插件」里自己更新。"
-              : " 电脑版在后台下载。下好后点页面上的「现在更新」，会静默装好并重新打开，不弹出安装窗口。从托盘退出时也会静默安装。只关窗口不会退出。"}
-          </p>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={githubMirrorOn(draft)}
-              onChange={(e) => setField("githubMirrorEnabled", e.target.checked)}
-            />
-            使用镜像下载更新
-          </label>
-          <p className="hint">
-            默认勾选。走{" "}
-            <a href={GITHUB_MIRROR_DOCS} target="_blank" rel="noreferrer">
-              gh.4o.pw
-            </a>{" "}
-            代下 GitHub 文件，国内网络更稳。说明见该页。取消勾选则直连 GitHub。电脑上请先保存，再检查更新。
-          </p>
-          {android ? (
-            <>
-              <div className="sync-actions">
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={checkUpdate}
-                  disabled={updateBusy || busy}
-                >
-                  {updateBusy ? "请稍候…" : "检查并安装更新"}
-                </button>
-              </div>
-              {updateNote ? <p className="sync-note">{updateNote}</p> : null}
-            </>
-          ) : null}
-        </section>
-
+        </Suspense>
         {error ? <p className="field-error">{error}</p> : null}
         <div className="sheet-actions">
           <button type="button" className="ghost" onClick={onClose}>
