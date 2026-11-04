@@ -617,19 +617,35 @@ blockquote {
 .drawer-scrim { display: none; }
 
 .reading-desk {
+  height: 100vh;
+  height: 100dvh;
   min-height: 100vh;
-  background: #231c16;
+  min-height: 100dvh;
+  background: var(--paper);
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  grid-template-columns: 88px 1fr 88px;
-  align-items: center;
-  justify-items: center;
-  padding: 16px 0 24px;
+  grid-template-areas:
+    "bar"
+    "picker"
+    "page"
+    "foot";
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  justify-items: stretch;
+  padding: 8px 0 0;
+  position: relative;
+  overflow: hidden;
+}
+
+body:has(.reading-desk) {
+  background: var(--paper);
+  overflow: hidden;
 }
 
 .reader-bar {
-  grid-column: 1 / -1;
-  width: min(720px, calc(100% - 32px));
+  grid-area: bar;
+  width: 100%;
+  padding: 4px 28px 8px;
   display: grid;
   grid-template-columns: 64px 1fr 64px;
   align-items: center;
@@ -640,22 +656,19 @@ blockquote {
   margin: 0;
   text-align: center;
   font-size: 18px;
-  color: var(--paper);
+  color: var(--ink);
   font-weight: 600;
 }
-
-.reader-bar .text-btn { color: var(--seal-on-dark); }
-.reader-bar .text-btn:hover { color: var(--paper); }
 
 .page-num { justify-self: end; }
 
 .page-picker {
-  grid-column: 2;
+  grid-area: picker;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   justify-content: center;
-  margin-bottom: 8px;
+  margin: 0 0 8px;
 }
 
 .page-picker button {
@@ -663,7 +676,7 @@ blockquote {
   height: 28px;
   border: 1px solid var(--ink-faint);
   background: transparent;
-  color: var(--paper);
+  color: var(--ink);
   border-radius: 2px;
 }
 
@@ -673,16 +686,19 @@ blockquote {
 }
 
 .reader-paper {
-  grid-column: 2;
-  width: min(720px, 62vw);
-  height: min(860px, 82vh);
+  grid-area: page;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   background: var(--paper);
-  padding: 28px 32px;
-  box-shadow: 0 16px 36px var(--paper-shadow);
-  background-image: repeating-linear-gradient(
-    transparent 0 calc(var(--line) - 1px),
-    var(--rule-soft) calc(var(--line) - 1px) var(--line)
-  );
+  padding: 8px 48px 16px 44px;
+  box-shadow: none;
+  background-image:
+    linear-gradient(90deg, transparent 23px, var(--rule) 23px, var(--rule) 24px, transparent 24px),
+    repeating-linear-gradient(
+      transparent 0 calc(var(--line) - 1px),
+      var(--rule-soft) calc(var(--line) - 1px) var(--line)
+    );
   overflow: hidden;
 }
 
@@ -737,8 +753,12 @@ blockquote {
 }
 
 .hotzone {
+  grid-area: page;
+  position: relative;
+  z-index: 2;
   align-self: stretch;
-  width: 88px;
+  justify-self: start;
+  width: 44px;
   border: 0;
   background: transparent;
   color: var(--ink-faint);
@@ -746,21 +766,24 @@ blockquote {
   opacity: 0;
 }
 
+.hotzone.right { justify-self: end; }
+
 .reading-desk:hover .hotzone { opacity: 1; }
 
 .reader-foot {
-  grid-column: 1 / -1;
-  margin: 12px 0 0;
+  grid-area: foot;
+  margin: 0;
+  padding: 8px 28px 12px;
   font-size: 12px;
-  color: var(--ink-faint);
+  color: var(--ink-muted);
 }
 
 .measure-sheet {
   position: absolute;
   left: -10000px;
   top: 0;
-  width: min(720px, 62vw);
-  padding: 0 32px;
+  width: 100%;
+  padding: 0 48px 0 44px;
   visibility: hidden;
   pointer-events: none;
 }
@@ -806,12 +829,11 @@ blockquote {
     );
   }
   .search input { width: 140px; }
-  .reader-paper,
-  .measure-sheet {
-    width: calc(100vw - 32px);
-  }
-  .hotzone { width: 48px; font-size: 28px; }
-  .reading-desk { grid-template-columns: 48px 1fr 48px; }
+  .reading-desk { padding: 0; }
+  .reader-paper { padding: 8px 20px 16px 36px; }
+  .measure-sheet { padding: 0 20px 0 36px; }
+  .reader-bar { padding-left: 16px; padding-right: 16px; }
+  .hotzone { width: 32px; font-size: 28px; }
 }
 
 button:focus-visible,
@@ -862,7 +884,8 @@ html.desktop-shell .desk:not(.reading-desk) .book {
 }
 
 html.desktop-shell .reading-desk {
-  padding-top: calc(var(--titlebar-height) + 16px);
+  padding-top: var(--titlebar-height);
+  background: var(--paper);
 }
 
 .win-controls {
@@ -959,7 +982,7 @@ html.has-update .book {
 }
 
 html.has-update .reading-desk {
-  padding-top: calc(var(--titlebar-height, 0px) + 48px + 16px);
+  padding-top: calc(var(--titlebar-height, 0px) + 48px);
 }
 
 @media (max-width: 900px) {

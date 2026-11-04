@@ -295,7 +295,7 @@ export default function ReadingMode({
       </button>
 
       {dayTerms.length ? (
-        <p className="reader-foot">
+        <p className="reader-foot" onClick={(e) => e.stopPropagation()}>
           共 {counts.total} 词 · 手写 {counts.hand} · AI {counts.ai}
         </p>
       ) : null}
