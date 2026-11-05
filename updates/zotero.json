@@ -3,9 +3,9 @@
     "paper-glossary@local": {
       "updates": [
         {
-          "version": "1.0.7",
-          "update_link": "https://github.com/QL796907/paperreading_tool/releases/download/v1.0.7/paper-glossary.xpi",
-          "update_hash": "sha256:218e224126ca941a34f36db2c4ea1406baea9e0ebb62dd5ba594048f268d38fe",
+          "version": "1.0.8",
+          "update_link": "https://github.com/QL796907/paperreading_tool/releases/download/v1.0.8/paper-glossary.xpi",
+          "update_hash": "sha256:7a746bd41b021b8969994c59dd4634b08d17979fe2a89896199c67e9a98739e1",
           "applications": {
             "zotero": {
               "strict_min_version": "7.0"
