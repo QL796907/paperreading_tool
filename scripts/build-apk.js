@@ -15,6 +15,16 @@ if (!fs.existsSync(gradle)) {
   process.exit(1);
 }
 
+const optSigningDir = "/opt/glossary-signing";
+for (const name of ["glossary.keystore", "keystore.properties"]) {
+  const dest = path.join(androidDir, name);
+  const src = path.join(optSigningDir, name);
+  if (!fs.existsSync(dest) && fs.existsSync(src)) {
+    fs.copyFileSync(src, dest);
+    fs.chmodSync(dest, 0o600);
+  }
+}
+
 const keystore = path.join(androidDir, "glossary.keystore");
 if (!fs.existsSync(keystore)) {
   console.error(`
