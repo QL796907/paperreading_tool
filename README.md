@@ -6,13 +6,13 @@
 
 读论文碰到不会的词，可以从 Zotero 里划一下，收进这本子。按日期一页页翻，解析能自己写，也可以让 AI 帮忙写。电脑和手机能看同一本。
 
-当前版本 **1.0.7**。
+当前版本 **1.0.8**。
 
-这一版有三处会碰到的变化。电脑窗口的标题栏回到之前的米色，书页铺满窗口，四周不再留一圈深色边。坚果云上还没有术语本文件夹时，同步会自己建好并上传，不再提示网盘返回 409。设置里填好 AI 地址、密钥和模型后，可以先点「测试连接」，确认接口能用再保存。
+这一版，词条多的时候，当天列表、搜索和翻页更顺。打开术语本也更快。
 
 设置里仍默认勾选「使用镜像下载更新」，国内下更新更稳；说明在 [gh.4o.pw](https://gh.4o.pw/docs)。不想用镜像，取消勾选即可。
 
-已经装上 1.0.4、1.0.5 或 1.0.6 的手机可以直接装这一版。更早的版本签名不同，请先卸载再装。电脑和 Zotero 插件可以直接覆盖安装。
+已经装上 1.0.4、1.0.5、1.0.6 或 1.0.7 的手机可以直接装这一版。更早的版本签名不同，请先卸载再装。电脑和 Zotero 插件可以直接覆盖安装。
 
 ## 下哪个
 
@@ -20,9 +20,9 @@
 
 | 你要用 | 点这里下 |
 | --- | --- |
-| Windows 电脑 | [术语本安装包](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.7/paper-glossary-Setup-1.0.7.exe) |
-| Android 手机 | [手机安装包](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.7/paper-glossary-1.0.7.apk) |
-| 在 Zotero 里划词加入 | [Zotero 插件](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.7/paper-glossary.xpi) |
+| Windows 电脑 | [术语本安装包](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.8/paper-glossary-Setup-1.0.8.exe) |
+| Android 手机 | [手机安装包](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.8/paper-glossary-1.0.8.apk) |
+| 在 Zotero 里划词加入 | [Zotero 插件](https://github.com/QL796907/paperreading_tool/releases/download/v1.0.8/paper-glossary.xpi) |
 
 电脑那一页上如果还有 `.blockmap`、`latest.yml`，不用下载。
 
@@ -48,7 +48,7 @@
 
 ## 卡住时看这里
 
-- 装的是 1.0.4、1.0.5 或 1.0.6，手机可以直接覆盖。更早的版本如果被系统拦住，先卸载再装。卸载不会经过坚果云，卸之前先在设置里同步一次，避免词条只留在手机上。
+- 装的是 1.0.4、1.0.5、1.0.6 或 1.0.7，手机可以直接覆盖。更早的版本如果被系统拦住，先卸载再装。卸载不会经过坚果云，卸之前先在设置里同步一次，避免词条只留在手机上。
 - 关掉窗口不等于退出。托盘里点「退出」才会真正关掉。退出之后，Zotero 里仍可以加入术语，下次打开术语本就能看到。自动解析要等打开后再做。
 - 手机没有划词。词在电脑上加，再用坚果云同步过来。
 - 左下角写着同步失败时，点那一行就能打开设置。测试连接成功只说明账号能登录，同步还要把术语本写进网盘。网盘上还没有术语本文件夹时，同步会自己建好。
