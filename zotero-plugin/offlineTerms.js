@@ -36,7 +36,7 @@ var PaperGlossaryOffline = {
     const timed = clock || this.clock();
     const result = this.upsert(envelope.terms, input || {}, timed);
     return {
-      text: JSON.stringify({ terms: result.terms, updatedAt: timed.now }, null, 2),
+      text: JSON.stringify({ terms: result.terms, updatedAt: timed.now }),
       term: result.term,
       created: result.created,
     };

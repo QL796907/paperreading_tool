@@ -55,6 +55,10 @@ test("offline apply matches upsertTermInList for a new word", () => {
   assert.equal(live.created, true);
   assert.deepEqual(envelope.terms, live.terms);
   assert.equal(envelope.updatedAt, iso);
+  assert.equal(
+    saved.text,
+    JSON.stringify({ terms: live.terms, updatedAt: iso }),
+  );
   assert.equal(envelope.terms[0].definitionSource, "empty");
   assert.equal(envelope.terms[0].word, "Ontology");
 });
