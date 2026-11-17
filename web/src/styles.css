@@ -851,7 +851,13 @@ html.desktop-shell {
   --titlebar-controls: calc(var(--titlebar-button) * 3);
   /* 之前选定的 B 色，比纸页 #f4ecd8 深一档。 */
   --titlebar: #dfd3bc;
+  /* 更新条只出现在这层壳里，高度与 .update-bar 相同。没有更新时让位是 0。 */
+  --update-bar-inset: 0px;
   background: var(--titlebar);
+}
+
+html.desktop-shell.has-update {
+  --update-bar-inset: 48px;
 }
 
 html.desktop-shell body {
@@ -861,7 +867,7 @@ html.desktop-shell body {
 html.desktop-shell .desk:not(.reading-desk) {
   height: 100vh;
   padding: 0;
-  padding-top: var(--titlebar-height);
+  padding-top: calc(var(--titlebar-height) + var(--update-bar-inset));
   place-items: stretch;
   background: var(--paper);
 }
@@ -885,7 +891,7 @@ html.desktop-shell .desk:not(.reading-desk) .book {
 }
 
 html.desktop-shell .reading-desk {
-  padding-top: var(--titlebar-height);
+  padding-top: calc(var(--titlebar-height) + var(--update-bar-inset));
   background: var(--paper);
 }
 
@@ -937,7 +943,7 @@ html.desktop-shell .reading-desk {
 @media (max-width: 900px) {
   html.desktop-shell .desk:not(.reading-desk) {
     padding: 0;
-    padding-top: var(--titlebar-height);
+    padding-top: calc(var(--titlebar-height) + var(--update-bar-inset));
   }
 
   html.desktop-shell .desk:not(.reading-desk) .book {
@@ -972,22 +978,4 @@ html.desktop-shell .reading-desk {
 
 .update-bar button:disabled {
   opacity: 0.7;
-}
-
-html.has-update .desk {
-  padding-top: calc(var(--titlebar-height, 0px) + 48px);
-}
-
-html.has-update .book {
-  height: min(720px, calc(100vh - var(--titlebar-height, 0px) - 48px - 24px));
-}
-
-html.has-update .reading-desk {
-  padding-top: calc(var(--titlebar-height, 0px) + 48px);
-}
-
-@media (max-width: 900px) {
-  html.has-update .book {
-    height: calc(100vh - var(--titlebar-height, 0px) - 48px - 12px);
-  }
 }
