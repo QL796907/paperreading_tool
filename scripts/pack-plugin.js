@@ -56,7 +56,7 @@ const updates = {
           update_link: `https://github.com/QL796907/paperreading_tool/releases/download/v${pkg.version}/paper-glossary.xpi`,
           update_hash: `sha256:${sha}`,
           applications: {
-            zotero: { strict_min_version: "7.0" },
+            zotero: { strict_min_version: "7.0", strict_max_version: "10.0.*" },
           },
         },
       ],

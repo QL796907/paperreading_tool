@@ -8,7 +8,8 @@
           "update_hash": "sha256:7a746bd41b021b8969994c59dd4634b08d17979fe2a89896199c67e9a98739e1",
           "applications": {
             "zotero": {
-              "strict_min_version": "7.0"
+              "strict_min_version": "7.0",
+              "strict_max_version": "10.0.*"
             }
           }
         }
